@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-vue-next"
 import {
   Folder,
   Forward,
-
+  Plus,
   MoreHorizontal,
   Trash2,
 } from "lucide-vue-next"
@@ -38,7 +38,7 @@ const { isMobile } = useSidebar()
 
 <template>
   <SidebarGroup class="group-data-[collapsible=icon]:hidden">
-    <SidebarGroupLabel>Projects</SidebarGroupLabel>
+    <SidebarGroupLabel>Toko E-Commerce</SidebarGroupLabel>
     <SidebarMenu>
       <SidebarMenuItem v-for="item in projects" :key="item.name">
         <SidebarMenuButton as-child>
@@ -50,8 +50,8 @@ const { isMobile } = useSidebar()
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
             <SidebarMenuAction show-on-hover>
-              <MoreHorizontal />
-              <span class="sr-only">More</span>
+              <Plus />
+              <span class="sr-only">Tambah Toko</span>
             </SidebarMenuAction>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -77,8 +77,8 @@ const { isMobile } = useSidebar()
       </SidebarMenuItem>
       <SidebarMenuItem>
         <SidebarMenuButton class="text-sidebar-foreground/70">
-          <MoreHorizontal class="text-sidebar-foreground/70" />
-          <span>More</span>
+          <Plus class="text-sidebar-foreground/70" />
+          <span>Tambah Toko</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>

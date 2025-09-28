@@ -6,12 +6,12 @@ import {
   BookOpen,
   Bot,
   Command,
-  Frame,
   GalleryVerticalEnd,
-  Map,
-  PieChart,
   Settings2,
-  SquareTerminal,
+  Music2,
+  Store,
+  House,
+  Shirt
 } from "lucide-vue-next"
 import NavMain from '@/components/NavMain.vue'
 import NavProjects from '@/components/NavProjects.vue'
@@ -56,40 +56,36 @@ const data = {
   ],
   navMain: [
     {
-      title: "Playground",
+      title: "Home",
       url: "#",
-      icon: SquareTerminal,
+      icon: House,
       isActive: true,
       items: [
         {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
+          title: "Dashboard",
           url: "#",
         },
       ],
     },
     {
-      title: "Models",
+      title: "Products",
       url: "#",
-      icon: Bot,
+      icon: Shirt,
       items: [
         {
-          title: "Genesis",
+          title: "Dashboard",
           url: "#",
         },
         {
-          title: "Explorer",
+          title: "Listing",
+          url: "#"
+        },
+        {
+          title: "View Products",
           url: "#",
         },
         {
-          title: "Quantum",
+          title: "Add Product",
           url: "#",
         },
       ],
@@ -143,19 +139,19 @@ const data = {
   ],
   projects: [
     {
-      name: "Design Engineering",
+      name: "Zarqa Store",
       url: "#",
-      icon: Frame,
+      icon: Store,
     },
     {
-      name: "Sales & Marketing",
+      name: "Adelia Shop",
       url: "#",
-      icon: PieChart,
+      icon: Music2,
     },
     {
-      name: "Travel",
+      name: "Daily Moeslim by Zarqa",
       url: "#",
-      icon: Map,
+      icon: Music2,
     },
   ],
 }
