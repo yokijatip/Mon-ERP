@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import type { SidebarProps } from '@/components/ui/sidebar'
-
 import {
   AudioWaveform,
   BookOpen,
@@ -16,7 +17,6 @@ import NavMain from '@/components/NavMain.vue'
 import NavProjects from '@/components/NavProjects.vue'
 import NavUser from '@/components/NavUser.vue'
 import TeamSwitcher from '@/components/TeamSwitcher.vue'
-
 import {
   Sidebar,
   SidebarContent,
@@ -29,11 +29,13 @@ const props = withDefaults(defineProps<SidebarProps>(), {
   collapsible: "icon",
 })
 
-// This is sample data.
+const route = useRoute()
+
+// Data sidebar - bisa dipindahkan ke composable atau store
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "Admin",
+    email: "admin@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
   teams: [
@@ -56,82 +58,81 @@ const data = {
   navMain: [
     {
       title: "Home",
-      url: "#",
       icon: House,
-      isActive: true,
+      url: '/home/dashboard',
       items: [
         {
           title: "Dashboard",
-          url: "#",
+          url: "/home/dashboard",
         },
       ],
     },
     {
       title: "Products",
-      url: "#",
+      url: "/products/dashboard",
       icon: Shirt,
       items: [
         {
           title: "Dashboard",
-          url: "#",
+          url: "/products/dashboard",
         },
         {
           title: "Listing",
-          url: "#"
+          url: "/products/listing"
         },
         {
           title: "View Products",
-          url: "#",
+          url: "/products/view",
         },
         {
           title: "Add Product",
-          url: "#",
+          url: "/products/add",
         },
       ],
     },
     {
       title: "Documentation",
-      url: "#",
+      url: "/documentation/introduction",
       icon: BookOpen,
       items: [
         {
           title: "Introduction",
-          url: "#",
+          url: "/documentation/introduction",
         },
         {
           title: "Get Started",
-          url: "#",
+          url: "/documentation/get-started",
         },
         {
           title: "Tutorials",
-          url: "#",
+          url: "/documentation/tutorials",
         },
         {
           title: "Changelog",
-          url: "#",
+          url: "/documentation/changelog",
         },
       ],
     },
     {
       title: "Settings",
-      url: "#",
+      url: "/settings/general",
       icon: Settings2,
       items: [
         {
           title: "General",
-          url: "#",
+          url: "/settings/general",
         },
         {
           title: "Team",
-          url: "#",
+          url: "/settings/team",
         },
         {
           title: "Billing",
-          url: "#",
+          url: "/settings/billing",
         },
         {
           title: "Limits",
-          url: "#",
+          url: "/settings/limits",
         },
       ],
     },
@@ -154,6 +155,14 @@ const data = {
     },
   ],
 }
+
+// Computed untuk menentukan menu aktif berdasarkan route
+const navMainWithActive = computed(() => {
+  return data.navMain.map(item => ({
+    ...item,
+    isActive: route.path.startsWith(item.url)
+  }))
+})
 </script>
 
 <template>
@@ -162,7 +171,7 @@ const data = {
       <TeamSwitcher :teams="data.teams" />
     </SidebarHeader>
     <SidebarContent>
-      <NavMain :items="data.navMain" />
+      <NavMain :items="navMainWithActive" />
       <NavProjects :projects="data.projects" />
     </SidebarContent>
     <SidebarFooter>

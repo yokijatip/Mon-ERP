@@ -36,11 +36,11 @@ defineProps<{
     <SidebarGroupLabel>Menu</SidebarGroupLabel>
     <SidebarMenu>
       <Collapsible
-        v-for="item in items"
-        :key="item.title"
-        as-child
-        :default-open="item.isActive"
-        class="group/collapsible"
+          v-for="item in items"
+          :key="item.title"
+          as-child
+          :default-open="item.isActive"
+          class="group/collapsible"
       >
         <SidebarMenuItem>
           <CollapsibleTrigger as-child>
@@ -54,9 +54,9 @@ defineProps<{
             <SidebarMenuSub>
               <SidebarMenuSubItem v-for="subItem in item.items" :key="subItem.title">
                 <SidebarMenuSubButton as-child>
-                  <a :href="subItem.url">
+                  <router-link :to="subItem.url">
                     <span>{{ subItem.title }}</span>
-                  </a>
+                  </router-link>
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>
             </SidebarMenuSub>

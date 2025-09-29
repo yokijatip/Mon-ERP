@@ -1,17 +1,138 @@
+// src/router/index.ts
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeDashboard from '@/views/home/HomeDashboard.vue'
+import type { RouteRecordRaw } from 'vue-router'
+import MainLayout from '@/layouts/MainLayout.vue'
 
-const routes = [
-  {
-    path: '/',
-    name: 'Home',
-    component: HomeDashboard
-  }
+const routes: RouteRecordRaw[] = [
+    {
+        path: '/',
+        component: MainLayout,
+        children: [
+            {
+                path: '',
+                redirect: '/home/dashboard'
+            },
+            // Home Routes
+            {
+                path: 'home/dashboard',
+                name: 'HomeDashboard',
+                component: () => import('@/views/home/HomeDashboard.vue'),
+                meta: {
+                    breadcrumb: [
+                        { label: 'Home', path: '/home/dashboard' },
+                        { label: 'Dashboard' }
+                    ]
+                }
+            },
+            // Products Routes
+            {
+                path: 'products/dashboard',
+                name: 'ProductsDashboard',
+                component: () => import('@/views/products/ProductDashboard.vue'),
+                meta: {
+                    breadcrumb: [
+                        { label: 'Products', path: '/products/dashboard' },
+                        { label: 'Dashboard' }
+                    ]
+                }
+            },
+            // Documentation Routes
+            // {
+            //     path: 'documentation/introduction',
+            //     name: 'Introduction',
+            //     component: () => import('@/views/Documentation/Introduction.vue'),
+            //     meta: {
+            //         breadcrumb: [
+            //             { label: 'Documentation', path: '/documentation/introduction' },
+            //             { label: 'Introduction' }
+            //         ]
+            //     }
+            // },
+            // {
+            //     path: 'documentation/get-started',
+            //     name: 'GetStarted',
+            //     component: () => import('@/views/Documentation/GetStarted.vue'),
+            //     meta: {
+            //         breadcrumb: [
+            //             { label: 'Documentation', path: '/documentation/introduction' },
+            //             { label: 'Get Started' }
+            //         ]
+            //     }
+            // },
+            // {
+            //     path: 'documentation/tutorials',
+            //     name: 'Tutorials',
+            //     component: () => import('@/views/Documentation/Tutorials.vue'),
+            //     meta: {
+            //         breadcrumb: [
+            //             { label: 'Documentation', path: '/documentation/introduction' },
+            //             { label: 'Tutorials' }
+            //         ]
+            //     }
+            // },
+            // {
+            //     path: 'documentation/changelog',
+            //     name: 'Changelog',
+            //     component: () => import('@/views/Documentation/Changelog.vue'),
+            //     meta: {
+            //         breadcrumb: [
+            //             { label: 'Documentation', path: '/documentation/introduction' },
+            //             { label: 'Changelog' }
+            //         ]
+            //     }
+            // },
+            // // Settings Routes
+            // {
+            //     path: 'settings/general',
+            //     name: 'General',
+            //     component: () => import('@/views/Settings/General.vue'),
+            //     meta: {
+            //         breadcrumb: [
+            //             { label: 'Settings', path: '/settings/general' },
+            //             { label: 'General' }
+            //         ]
+            //     }
+            // },
+            // {
+            //     path: 'settings/team',
+            //     name: 'Team',
+            //     component: () => import('@/views/Settings/Team.vue'),
+            //     meta: {
+            //         breadcrumb: [
+            //             { label: 'Settings', path: '/settings/general' },
+            //             { label: 'Team' }
+            //         ]
+            //     }
+            // },
+            // {
+            //     path: 'settings/billing',
+            //     name: 'Billing',
+            //     component: () => import('@/views/Settings/Billing.vue'),
+            //     meta: {
+            //         breadcrumb: [
+            //             { label: 'Settings', path: '/settings/general' },
+            //             { label: 'Billing' }
+            //         ]
+            //     }
+            // },
+            // {
+            //     path: 'settings/limits',
+            //     name: 'Limits',
+            //     component: () => import('@/views/Settings/Limits.vue'),
+            //     meta: {
+            //         breadcrumb: [
+            //             { label: 'Settings', path: '/settings/general' },
+            //             { label: 'Limits' }
+            //         ]
+            //     }
+            // }
+        ]
+    }
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
-  routes
+    history: createWebHistory(import.meta.env.BASE_URL),
+    routes
 })
 
 export default router
