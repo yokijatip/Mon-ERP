@@ -4,7 +4,6 @@ import type { SidebarProps } from '@/components/ui/sidebar'
 import {
   AudioWaveform,
   BookOpen,
-  Bot,
   Command,
   GalleryVerticalEnd,
   Settings2,
