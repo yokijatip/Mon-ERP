@@ -4,14 +4,16 @@ import { useRoute } from 'vue-router'
 import type { SidebarProps } from '@/components/ui/sidebar'
 import {
   AudioWaveform,
-  BookOpen,
   Command,
   GalleryVerticalEnd,
-  Settings2,
-  Music2,
-  Store,
   House,
-  Shirt
+  DollarSign,
+  Users,
+  Package,
+  ShoppingCart,
+  FileText,
+  TrendingUp,
+  Settings
 } from "lucide-vue-next"
 import NavMain from '@/components/NavMain.vue'
 import NavProjects from '@/components/NavProjects.vue'
@@ -31,7 +33,7 @@ const props = withDefaults(defineProps<SidebarProps>(), {
 
 const route = useRoute()
 
-// Data sidebar - bisa dipindahkan ke composable atau store
+// Data sidebar
 const data = {
   user: {
     name: "Admin",
@@ -57,7 +59,7 @@ const data = {
   ],
   navMain: [
     {
-      title: "Home",
+      title: "home",
       icon: House,
       url: '/home/dashboard',
       items: [
@@ -68,71 +70,151 @@ const data = {
       ],
     },
     {
-      title: "Products",
-      url: "/products/dashboard",
-      icon: Shirt,
+      title: "finance",
+      url: "/finance/dashboard",
+      icon: DollarSign,
       items: [
         {
           title: "Dashboard",
-          url: "/products/dashboard",
+          url: "/finance/dashboard",
         },
         {
-          title: "Listing",
-          url: "/products/listing"
+          title: "Cash Flow",
+          url: "/finance/cash-flow",
         },
         {
-          title: "View Products",
-          url: "/products/view",
+          title: "Financial reports",
+          url: "/finance/financial-reports",
         },
         {
-          title: "Add Product",
-          url: "/products/add",
+          title: "General Ledger",
+          url: "/finance/general-ledger",
         },
       ],
     },
     {
-      title: "Documentation",
-      url: "/documentation/introduction",
-      icon: BookOpen,
+      title: "Human Resources",
+      url: "/human-resources/dashboard",
+      icon: Users,
       items: [
         {
-          title: "Introduction",
-          url: "/documentation/introduction",
+          title: "Dashboard",
+          url: "/human-resources/dashboard",
         },
         {
-          title: "Get Started",
-          url: "/documentation/get-started",
+          title: "Employees",
+          url: "/human-resources/employees",
         },
         {
-          title: "Tutorials",
-          url: "/documentation/tutorials",
+          title: "Attendance",
+          url: "/human-resources/attendance",
         },
         {
-          title: "Changelog",
-          url: "/documentation/changelog",
+          title: "Payroll",
+          url: "/human-resources/payroll",
+        },
+      ],
+    },
+    {
+      title: "inventory",
+      url: "/inventory/dashboard",
+      icon: Package,
+      items: [
+        {
+          title: "Dashboard",
+          url: "/inventory/dashboard",
+        },
+        {
+          title: "Stock Overview",
+          url: "/inventory/stock-overview",
+        },
+        {
+          title: "Adjustments",
+          url: "/inventory/adjustments",
+        },
+        {
+          title: "Stock reports",
+          url: "/inventory/stock-reports",
+        },
+      ],
+    },
+    {
+      title: "purchasing",
+      url: "/purchasing/dashboard",
+      icon: ShoppingCart,
+      items: [
+        {
+          title: "Dashboard",
+          url: "/purchasing/dashboard",
+        },
+        {
+          title: "Purchase Requests",
+          url: "/purchasing/purchase-requests",
+        },
+        {
+          title: "Purchase Order History",
+          url: "/purchasing/purchase-order-history",
+        },
+        {
+          title: "Suppliers",
+          url: "/purchasing/suppliers",
+        },
+      ],
+    },
+    {
+      title: "reports",
+      url: "/reports/consolidated-reports",
+      icon: FileText,
+      items: [
+        {
+          title: "Consolidated reports",
+          url: "/reports/consolidated-reports",
+        },
+        {
+          title: "Exports",
+          url: "/reports/exports",
+        },
+      ],
+    },
+    {
+      title: "sales",
+      url: "/sales/dashboard",
+      icon: TrendingUp,
+      items: [
+        {
+          title: "Dashboard",
+          url: "/sales/dashboard",
+        },
+        {
+          title: "Customers",
+          url: "/sales/customers",
+        },
+        {
+          title: "Orders",
+          url: "/sales/orders",
+        },
+        {
+          title: "Invoices",
+          url: "/sales/invoices",
         },
       ],
     },
     {
       title: "Settings",
-      url: "/settings/general",
-      icon: Settings2,
+      url: "/settings/integrations",
+      icon: Settings,
       items: [
         {
-          title: "General",
-          url: "/settings/general",
+          title: "Integrations",
+          url: "/settings/integrations",
         },
         {
-          title: "Team",
-          url: "/settings/team",
+          title: "Roles & Permission",
+          url: "/settings/roles-permission",
         },
         {
-          title: "Billing",
-          url: "/settings/billing",
-        },
-        {
-          title: "Limits",
-          url: "/settings/limits",
+          title: "System Preferences",
+          url: "/settings/system-preferences",
         },
       ],
     },
@@ -141,17 +223,17 @@ const data = {
     {
       name: "Zarqa Store",
       url: "#",
-      icon: Store,
+      icon: GalleryVerticalEnd,
     },
     {
       name: "Adelia Shop",
       url: "#",
-      icon: Music2,
+      icon: AudioWaveform,
     },
     {
       name: "Daily Moeslim by Zarqa",
       url: "#",
-      icon: Music2,
+      icon: Command,
     },
   ],
 }
@@ -160,7 +242,7 @@ const data = {
 const navMainWithActive = computed(() => {
   return data.navMain.map(item => ({
     ...item,
-    isActive: route.path.startsWith(item.url)
+    isActive: route.path.startsWith(item.url.split('/').slice(0, 2).join('/'))
   }))
 })
 </script>
