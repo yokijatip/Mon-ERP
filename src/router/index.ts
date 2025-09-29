@@ -1,12 +1,43 @@
 // src/router/index.ts
-import type {RouteRecordRaw} from 'vue-router'
-import {createRouter, createWebHistory} from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import MainLayout from '@/layouts/MainLayout.vue'
+import { authGuard, onboardingGuard } from './guards'
 
 const routes: RouteRecordRaw[] = [
+    // Auth Routes (Public - no authentication required)
+    {
+        path: '/login',
+        name: 'Login',
+        component: () => import('@/views/auth/LoginView.vue'),
+        meta: { requiresGuest: true }
+    },
+    {
+        path: '/register',
+        name: 'Register',
+        component: () => import('@/views/auth/RegisterView.vue'),
+        meta: { requiresGuest: true }
+    },
+    {
+        path: '/forgot-password',
+        name: 'ForgotPassword',
+        component: () => import('@/views/auth/ForgotPasswordView.vue'),
+        meta: { requiresGuest: true }
+    },
+
+    // Onboarding (Authenticated but not yet onboarded)
+    {
+        path: '/onboarding',
+        name: 'Onboarding',
+        component: () => import('@/views/auth/OnboardingView.vue'),
+        meta: { requiresAuth: true }
+    },
+
+    // Main Application Routes (Requires authentication)
     {
         path: '/',
         component: MainLayout,
+        meta: { requiresAuth: true },
         children: [
             {
                 path: '',
@@ -54,7 +85,7 @@ const routes: RouteRecordRaw[] = [
                 meta: {
                     breadcrumb: [
                         { label: 'Finance', path: '/finance/dashboard' },
-                        { label: 'Financial reports' }
+                        { label: 'Financial Reports' }
                     ]
                 }
             },
@@ -114,14 +145,14 @@ const routes: RouteRecordRaw[] = [
                     ]
                 }
             },
-            // inventory Routes
+            // Inventory Routes
             {
                 path: 'inventory/adjustments',
                 name: 'Adjustments',
                 component: () => import('@/views/inventory/Adjustments.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'inventory', path: '/inventory/dashboard' },
+                        { label: 'Inventory', path: '/inventory/dashboard' },
                         { label: 'Adjustments' }
                     ]
                 }
@@ -132,7 +163,7 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/inventory/InventoryDashboard.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'inventory', path: '/inventory/dashboard' },
+                        { label: 'Inventory', path: '/inventory/dashboard' },
                         { label: 'Dashboard' }
                     ]
                 }
@@ -143,7 +174,7 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/inventory/StockOverview.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'inventory', path: '/inventory/dashboard' },
+                        { label: 'Inventory', path: '/inventory/dashboard' },
                         { label: 'Stock Overview' }
                     ]
                 }
@@ -154,19 +185,19 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/inventory/StockReports.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'inventory', path: '/inventory/dashboard' },
-                        { label: 'Stock reports' }
+                        { label: 'Inventory', path: '/inventory/dashboard' },
+                        { label: 'Stock Reports' }
                     ]
                 }
             },
-            // purchasing Routes
+            // Purchasing Routes
             {
                 path: 'purchasing/purchase-order-history',
                 name: 'PurchaseOrderHistory',
                 component: () => import('@/views/purchasing/PurchaseOrderHistory.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'purchasing', path: '/purchasing/dashboard' },
+                        { label: 'Purchasing', path: '/purchasing/dashboard' },
                         { label: 'Purchase Order History' }
                     ]
                 }
@@ -177,7 +208,7 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/purchasing/PurchaseRequests.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'purchasing', path: '/purchasing/dashboard' },
+                        { label: 'Purchasing', path: '/purchasing/dashboard' },
                         { label: 'Purchase Requests' }
                     ]
                 }
@@ -188,7 +219,7 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/purchasing/PurchasingDashboard.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'purchasing', path: '/purchasing/dashboard' },
+                        { label: 'Purchasing', path: '/purchasing/dashboard' },
                         { label: 'Dashboard' }
                     ]
                 }
@@ -199,20 +230,20 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/purchasing/Suppliers.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'purchasing', path: '/purchasing/dashboard' },
+                        { label: 'Purchasing', path: '/purchasing/dashboard' },
                         { label: 'Suppliers' }
                     ]
                 }
             },
-            // reports Routes
+            // Reports Routes
             {
                 path: 'reports/consolidated-reports',
                 name: 'ConsolidatedReports',
                 component: () => import('@/views/reports/ConsolidatedReports.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'reports', path: '/reports/consolidated-reports' },
-                        { label: 'Consolidated reports' }
+                        { label: 'Reports', path: '/reports/consolidated-reports' },
+                        { label: 'Consolidated Reports' }
                     ]
                 }
             },
@@ -222,19 +253,19 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/reports/Exports.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'reports', path: '/reports/consolidated-reports' },
+                        { label: 'Reports', path: '/reports/consolidated-reports' },
                         { label: 'Exports' }
                     ]
                 }
             },
-            // sales Routes
+            // Sales Routes
             {
                 path: 'sales/customers',
                 name: 'Customers',
                 component: () => import('@/views/sales/Customers.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'sales', path: '/sales/dashboard' },
+                        { label: 'Sales', path: '/sales/dashboard' },
                         { label: 'Customers' }
                     ]
                 }
@@ -245,7 +276,7 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/sales/Invoices.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'sales', path: '/sales/dashboard' },
+                        { label: 'Sales', path: '/sales/dashboard' },
                         { label: 'Invoices' }
                     ]
                 }
@@ -256,7 +287,7 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/sales/Orders.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'sales', path: '/sales/dashboard' },
+                        { label: 'Sales', path: '/sales/dashboard' },
                         { label: 'Orders' }
                     ]
                 }
@@ -267,12 +298,12 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/sales/SalesDashboard.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'sales', path: '/sales/dashboard' },
+                        { label: 'Sales', path: '/sales/dashboard' },
                         { label: 'Dashboard' }
                     ]
                 }
             },
-            // settings Routes
+            // Settings Routes
             {
                 path: 'settings/integrations',
                 name: 'Integrations',
@@ -307,6 +338,13 @@ const routes: RouteRecordRaw[] = [
                 }
             }
         ]
+    },
+
+    // 404 Not Found
+    {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('@/views/error/NotFoundView.vue')
     }
 ]
 
@@ -314,5 +352,9 @@ const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes
 })
+
+// Apply global navigation guards
+router.beforeEach(authGuard)
+router.beforeEach(onboardingGuard)
 
 export default router
