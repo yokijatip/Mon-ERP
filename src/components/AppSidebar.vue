@@ -59,7 +59,7 @@ const data = {
   ],
   navMain: [
     {
-      title: "home",
+      title: "Home",
       icon: House,
       url: '/home/dashboard',
       items: [
@@ -70,7 +70,7 @@ const data = {
       ],
     },
     {
-      title: "finance",
+      title: "Finance",
       url: "/finance/dashboard",
       icon: DollarSign,
       items: [
@@ -116,7 +116,7 @@ const data = {
       ],
     },
     {
-      title: "inventory",
+      title: "Inventory",
       url: "/inventory/dashboard",
       icon: Package,
       items: [
@@ -139,7 +139,7 @@ const data = {
       ],
     },
     {
-      title: "purchasing",
+      title: "Purchasing",
       url: "/purchasing/dashboard",
       icon: ShoppingCart,
       items: [
@@ -162,7 +162,7 @@ const data = {
       ],
     },
     {
-      title: "reports",
+      title: "Reports",
       url: "/reports/consolidated-reports",
       icon: FileText,
       items: [
@@ -177,7 +177,7 @@ const data = {
       ],
     },
     {
-      title: "sales",
+      title: "Sales",
       url: "/sales/dashboard",
       icon: TrendingUp,
       items: [
