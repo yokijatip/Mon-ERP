@@ -307,7 +307,7 @@ interface ProductVariant {
 
 #### Orders Management
 ```typescript
-// /organizations/{orgId}/orders/{orderId}
+// /organizations/{orgId}/Sales/{orderId}
 interface Order {
   id: string
   orderNumber: string
@@ -402,7 +402,7 @@ interface Integration {
 
 interface SyncError {
   timestamp: Timestamp
-  operation: 'orders' | 'products' | 'inventory'
+  operation: 'Sales' | 'products' | 'inventory'
   error: string
   details?: any
 }
@@ -811,9 +811,9 @@ service cloud.firestore {
       let userRole = get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role;
       
       return userRole == 'owner' || userRole == 'admin' ||
-        (userRole == 'manager' && collection in ['products', 'orders', 'customers']) ||
-        (userRole == 'staff' && collection in ['orders']) ||
-        (userRole == 'accountant' && collection in ['orders']);
+        (userRole == 'manager' && collection in ['products', 'Sales', 'customers']) ||
+        (userRole == 'staff' && collection in ['Sales']) ||
+        (userRole == 'accountant' && collection in ['Sales']);
     }
   }
 }
@@ -1277,7 +1277,7 @@ export class IntegrationService {
       const orderRef = db
         .collection('organizations')
         .doc(this.orgId)
-        .collection('orders')
+        .collection('Sales')
         .doc(orderId)
       
       const transformedOrder = this.transformTiktokOrder(orderData)

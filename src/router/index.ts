@@ -10,16 +10,16 @@ const routes: RouteRecordRaw[] = [
         children: [
             {
                 path: '',
-                redirect: '/home/dashboard'
+                redirect: '/Home/dashboard'
             },
             // Home Routes
             {
-                path: 'home/dashboard',
+                path: 'Home/dashboard',
                 name: 'HomeDashboard',
-                component: () => import('@/views/home/HomeDashboard.vue'),
+                component: () => import('@/views/Home/HomeDashboard.vue'),
                 meta: {
                     breadcrumb: [
-                        { label: 'Home', path: '/home/dashboard' },
+                        { label: 'Home', path: '/Home/dashboard' },
                         { label: 'Dashboard' }
                     ]
                 }
