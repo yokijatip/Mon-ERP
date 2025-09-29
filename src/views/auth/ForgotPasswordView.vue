@@ -2,18 +2,21 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useLoading } from '@/composables/useLoading'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { isLoading, progress, startLoading } = useLoading()
 
 const email = ref('')
 const errorMessage = ref('')
 const successMessage = ref('')
-const isLoading = ref(false)
 
 const handleResetPassword = async () => {
   if (!email.value) {
@@ -21,11 +24,11 @@ const handleResetPassword = async () => {
     return
   }
 
-  try {
-    isLoading.value = true
-    errorMessage.value = ''
-    successMessage.value = ''
+  const finishLoading = startLoading()
+  errorMessage.value = ''
+  successMessage.value = ''
 
+  try {
     await authStore.resetPassword(email.value)
 
     successMessage.value = 'Password reset email sent! Check your inbox.'
@@ -37,7 +40,7 @@ const handleResetPassword = async () => {
   } catch (error: any) {
     errorMessage.value = getErrorMessage(error.code)
   } finally {
-    isLoading.value = false
+    finishLoading()
   }
 }
 
@@ -56,56 +59,66 @@ const getErrorMessage = (code: string): string => {
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
     <div class="w-full max-w-md">
-      <div class="bg-white rounded-lg shadow-xl p-8">
-        <!-- Logo & Title -->
-        <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">Reset Password</h1>
-          <p class="text-gray-600">Enter your email to receive a reset link</p>
-        </div>
+      <Card class="shadow-xl">
+        <CardHeader class="text-center">
+          <CardTitle class="text-3xl font-bold text-gray-900">Reset Password</CardTitle>
+          <CardDescription>Enter your email to receive a reset link</CardDescription>
+        </CardHeader>
+        
+        <CardContent class="space-y-6">
+          <!-- Loading Progress -->
+          <div v-if="isLoading" class="space-y-2">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-muted-foreground">Sending reset link...</span>
+              <span class="text-muted-foreground">{{ Math.round(progress) }}%</span>
+            </div>
+            <Progress :model-value="progress" class="h-2" />
+          </div>
 
-        <!-- Error Alert -->
-        <Alert v-if="errorMessage" variant="destructive" class="mb-6">
-          <AlertDescription>{{ errorMessage }}</AlertDescription>
-        </Alert>
+          <!-- Error Alert -->
+          <Alert v-if="errorMessage" variant="destructive">
+            <AlertDescription>{{ errorMessage }}</AlertDescription>
+          </Alert>
 
-        <!-- Success Alert -->
-        <Alert v-if="successMessage" class="mb-6 bg-green-50 border-green-200">
-          <AlertDescription class="text-green-800">{{ successMessage }}</AlertDescription>
-        </Alert>
+          <!-- Success Alert -->
+          <Alert v-if="successMessage" class="bg-green-50 border-green-200">
+            <AlertDescription class="text-green-800">{{ successMessage }}</AlertDescription>
+          </Alert>
 
-        <!-- Reset Form -->
-        <form @submit.prevent="handleResetPassword" class="space-y-6">
-          <div class="space-y-2">
-            <Label for="email">Email</Label>
-            <Input
+          <!-- Reset Form -->
+          <form @submit.prevent="handleResetPassword" class="space-y-4">
+            <div class="space-y-2">
+              <Label for="email">Email</Label>
+              <Input
                 id="email"
                 v-model="email"
                 type="email"
                 placeholder="you@example.com"
                 required
                 :disabled="isLoading || !!successMessage"
-            />
-          </div>
+              />
+            </div>
 
-          <Button
+            <Button
               type="submit"
               class="w-full"
               :disabled="isLoading || !!successMessage"
-          >
-            {{ isLoading ? 'Sending...' : 'Send Reset Link' }}
-          </Button>
-        </form>
+            >
+              {{ isLoading ? 'Sending...' : 'Send Reset Link' }}
+            </Button>
+          </form>
 
-        <!-- Back to Login Link -->
-        <div class="mt-6 text-center">
-          <router-link
+          <!-- Back to Login Link -->
+          <div class="text-center">
+            <router-link
               to="/login"
               class="text-sm text-blue-600 hover:text-blue-700 font-medium"
-          >
-            ← Back to Login
-          </router-link>
-        </div>
-      </div>
+            >
+              ← Back to Login
+            </router-link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   </div>
 </template>

@@ -2,20 +2,23 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useLoading } from '@/composables/useLoading'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { isLoading, progress, startLoading } = useLoading()
 
 const displayName = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const errorMessage = ref('')
-const isLoading = ref(false)
 
 const handleRegister = async () => {
   // Validation
@@ -34,18 +37,18 @@ const handleRegister = async () => {
     return
   }
 
+  const finishLoading = startLoading()
+  errorMessage.value = ''
+
   try {
-    isLoading.value = true
-    errorMessage.value = ''
-
     await authStore.register(email.value, password.value, displayName.value)
-
+    
     // Redirect to onboarding
     router.push('/onboarding')
   } catch (error: any) {
     errorMessage.value = getErrorMessage(error.code)
   } finally {
-    isLoading.value = false
+    finishLoading()
   }
 }
 
@@ -66,91 +69,101 @@ const getErrorMessage = (code: string): string => {
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
     <div class="w-full max-w-md">
-      <div class="bg-white rounded-lg shadow-xl p-8">
-        <!-- Logo & Title -->
-        <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-          <p class="text-gray-600">Sign up to get started</p>
-        </div>
+      <Card class="shadow-xl">
+        <CardHeader class="text-center">
+          <CardTitle class="text-3xl font-bold text-gray-900">Create Account</CardTitle>
+          <CardDescription>Sign up to get started</CardDescription>
+        </CardHeader>
+        
+        <CardContent class="space-y-6">
+          <!-- Loading Progress -->
+          <div v-if="isLoading" class="space-y-2">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-muted-foreground">Creating account...</span>
+              <span class="text-muted-foreground">{{ Math.round(progress) }}%</span>
+            </div>
+            <Progress :model-value="progress" class="h-2" />
+          </div>
 
-        <!-- Error Alert -->
-        <Alert v-if="errorMessage" variant="destructive" class="mb-6">
-          <AlertDescription>{{ errorMessage }}</AlertDescription>
-        </Alert>
+          <!-- Error Alert -->
+          <Alert v-if="errorMessage" variant="destructive">
+            <AlertDescription>{{ errorMessage }}</AlertDescription>
+          </Alert>
 
-        <!-- Register Form -->
-        <form @submit.prevent="handleRegister" class="space-y-4">
-          <div class="space-y-2">
-            <Label for="displayName">Full Name</Label>
-            <Input
+          <!-- Register Form -->
+          <form @submit.prevent="handleRegister" class="space-y-4">
+            <div class="space-y-2">
+              <Label for="displayName">Full Name</Label>
+              <Input
                 id="displayName"
                 v-model="displayName"
                 type="text"
                 placeholder="John Doe"
                 required
                 :disabled="isLoading"
-            />
-          </div>
+              />
+            </div>
 
-          <div class="space-y-2">
-            <Label for="email">Email</Label>
-            <Input
+            <div class="space-y-2">
+              <Label for="email">Email</Label>
+              <Input
                 id="email"
                 v-model="email"
                 type="email"
                 placeholder="you@example.com"
                 required
                 :disabled="isLoading"
-            />
-          </div>
+              />
+            </div>
 
-          <div class="space-y-2">
-            <Label for="password">Password</Label>
-            <Input
+            <div class="space-y-2">
+              <Label for="password">Password</Label>
+              <Input
                 id="password"
                 v-model="password"
                 type="password"
                 placeholder="••••••••"
                 required
                 :disabled="isLoading"
-            />
-            <p class="text-xs text-gray-500">Must be at least 6 characters</p>
-          </div>
+              />
+              <p class="text-xs text-gray-500">Must be at least 6 characters</p>
+            </div>
 
-          <div class="space-y-2">
-            <Label for="confirmPassword">Confirm Password</Label>
-            <Input
+            <div class="space-y-2">
+              <Label for="confirmPassword">Confirm Password</Label>
+              <Input
                 id="confirmPassword"
                 v-model="confirmPassword"
                 type="password"
                 placeholder="••••••••"
                 required
                 :disabled="isLoading"
-            />
-          </div>
+              />
+            </div>
 
-          <Button
+            <Button
               type="submit"
               class="w-full"
               :disabled="isLoading"
-          >
-            {{ isLoading ? 'Creating account...' : 'Create Account' }}
-          </Button>
-        </form>
+            >
+              {{ isLoading ? 'Creating account...' : 'Create Account' }}
+            </Button>
+          </form>
 
-        <!-- Login Link -->
-        <div class="mt-6 text-center">
-          <p class="text-sm text-gray-600">
-            Already have an account?
-            <router-link
+          <!-- Login Link -->
+          <div class="text-center">
+            <p class="text-sm text-gray-600">
+              Already have an account?
+              <router-link
                 to="/login"
                 class="text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Sign in
-            </router-link>
-          </p>
-        </div>
-      </div>
+              >
+                Sign in
+              </router-link>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   </div>
 </template>
