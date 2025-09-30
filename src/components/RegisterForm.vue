@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import type { HTMLAttributes } from "vue"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from '@/stores/auth'
@@ -17,17 +17,28 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const route = useRoute()
 const authStore = useAuthStore()
 const { isLoading, progress, startLoading } = useLoading()
 
+const fullName = ref('')
 const email = ref('')
 const password = ref('')
+const confirmPassword = ref('')
 const errorMessage = ref('')
 
-const handleLogin = async () => {
-  if (!email.value || !password.value) {
+const handleRegister = async () => {
+  if (!fullName.value || !email.value || !password.value || !confirmPassword.value) {
     errorMessage.value = 'Please fill in all fields'
+    return
+  }
+
+  if (password.value !== confirmPassword.value) {
+    errorMessage.value = 'Passwords do not match'
+    return
+  }
+
+  if (password.value.length < 6) {
+    errorMessage.value = 'Password must be at least 6 characters'
     return
   }
 
@@ -35,10 +46,8 @@ const handleLogin = async () => {
   errorMessage.value = ''
 
   try {
-    await authStore.login(email.value, password.value)
-
-    const redirect = route.query.redirect as string || '/'
-    router.push(redirect)
+    await authStore.register(email.value, password.value, fullName.value)
+    router.push('/onboarding')
   } catch (error: any) {
     errorMessage.value = getErrorMessage(error.code)
   } finally {
@@ -48,20 +57,16 @@ const handleLogin = async () => {
 
 const getErrorMessage = (code: string): string => {
   switch (code) {
-    case 'auth/user-not-found':
-      return 'No account found with this email'
-    case 'auth/wrong-password':
-      return 'Incorrect password'
+    case 'auth/email-already-in-use':
+      return 'This email is already registered'
     case 'auth/invalid-email':
       return 'Invalid email address'
-    case 'auth/user-disabled':
-      return 'This account has been disabled'
-    case 'auth/too-many-requests':
-      return 'Too many failed attempts. Please try again later'
-    case 'auth/invalid-credential':
-      return 'Invalid email or password'
+    case 'auth/weak-password':
+      return 'Password is too weak'
+    case 'auth/operation-not-allowed':
+      return 'Registration is currently disabled'
     default:
-      return 'Login failed. Please try again'
+      return 'Registration failed. Please try again'
   }
 }
 </script>
@@ -70,20 +75,20 @@ const getErrorMessage = (code: string): string => {
   <div :class="cn('flex flex-col gap-6', props.class)">
     <Card class="overflow-hidden p-0">
       <CardContent class="grid p-0 md:grid-cols-2">
-        <form @submit.prevent="handleLogin" class="p-6 md:p-8">
+        <form @submit.prevent="handleRegister" class="p-6 md:p-8">
           <div class="flex flex-col gap-6">
             <div class="flex flex-col items-center text-center">
               <h1 class="text-2xl font-bold">
-                Welcome back
+                Create an account
               </h1>
               <p class="text-muted-foreground text-balance">
-                Login to your ERP account
+                Start managing your business today
               </p>
             </div>
 
             <div v-if="isLoading" class="space-y-2">
               <div class="flex items-center justify-between text-sm">
-                <span class="text-muted-foreground">Signing in...</span>
+                <span class="text-muted-foreground">Creating account...</span>
                 <span class="text-muted-foreground">{{ Math.round(progress) }}%</span>
               </div>
               <Progress :model-value="progress" class="h-2" />
@@ -93,6 +98,17 @@ const getErrorMessage = (code: string): string => {
               <AlertDescription>{{ errorMessage }}</AlertDescription>
             </Alert>
 
+            <div class="grid gap-3">
+              <Label for="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                v-model="fullName"
+                type="text"
+                placeholder="John Doe"
+                required
+                :disabled="isLoading"
+              />
+            </div>
             <div class="grid gap-3">
               <Label for="email">Email</Label>
               <Input
@@ -105,38 +121,42 @@ const getErrorMessage = (code: string): string => {
               />
             </div>
             <div class="grid gap-3">
-              <div class="flex items-center">
-                <Label for="password">Password</Label>
-                <router-link
-                  to="/forgot-password"
-                  class="ml-auto text-sm underline-offset-2 hover:underline"
-                >
-                  Forgot your password?
-                </router-link>
-              </div>
+              <Label for="password">Password</Label>
               <Input
                 id="password"
                 v-model="password"
                 type="password"
+                placeholder="At least 6 characters"
+                required
+                :disabled="isLoading"
+              />
+            </div>
+            <div class="grid gap-3">
+              <Label for="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                v-model="confirmPassword"
+                type="password"
+                placeholder="Re-enter your password"
                 required
                 :disabled="isLoading"
               />
             </div>
             <Button type="submit" class="w-full" :disabled="isLoading">
-              {{ isLoading ? 'Signing in...' : 'Login' }}
+              {{ isLoading ? 'Creating account...' : 'Sign up' }}
             </Button>
             <div class="text-center text-sm">
-              Don't have an account?
-              <router-link to="/register" class="underline underline-offset-4">
-                Sign up
+              Already have an account?
+              <router-link to="/login" class="underline underline-offset-4">
+                Sign in
               </router-link>
             </div>
           </div>
         </form>
         <div class="bg-muted relative hidden md:block">
           <img
-            src="https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg?auto=compress&cs=tinysrgb&w=800"
-            alt="Business workspace"
+            src="https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=800"
+            alt="Business team"
             class="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
           >
         </div>
