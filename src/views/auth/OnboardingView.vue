@@ -13,21 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { 
-  Building2, 
-  Store, 
-  Users, 
-  CheckCircle, 
-  ArrowRight, 
-  ArrowLeft,
-  Briefcase,
-  ShoppingBag,
-  Utensils,
-  Smartphone,
-  Shirt,
-  Home,
-  Package
-} from 'lucide-vue-next'
+import { Building2, Store, Users, CircleCheck as CheckCircle, ArrowRight, ArrowLeft, Briefcase, ShoppingBag, Utensils, Smartphone, Shirt, Hop as Home, Package } from 'lucide-vue-next'
 
 const router = useRouter()
 const authStore = useAuthStore()
