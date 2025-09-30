@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+<<<<<<< HEAD
 import {
   Building2,
   Store,
@@ -28,6 +29,9 @@ import {
   Home,
   Package
 } from 'lucide-vue-next'
+=======
+import { Building2, Store, Users, CircleCheck as CheckCircle, ArrowRight, ArrowLeft, Briefcase, ShoppingBag, Utensils, Smartphone, Shirt, Hop as Home, Package } from 'lucide-vue-next'
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -115,10 +119,17 @@ const completeOnboarding = async () => {
     // Generate organization ID and slug
     const orgId = crypto.randomUUID()
     const slug = businessInfo.value.businessName
+<<<<<<< HEAD
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '-')
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '')
+=======
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
 
     // Create organization document
     await setDoc(doc(db, 'organizations', orgId), {
@@ -169,7 +180,11 @@ const completeOnboarding = async () => {
     await authStore.loadUserProfile(authStore.user.uid)
 
     successMessage.value = 'Onboarding completed successfully!'
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
     // Redirect to dashboard after 2 seconds
     setTimeout(() => {
       router.push('/home/dashboard')
@@ -256,19 +271,33 @@ const getStepDescription = (step: number) => {
               <div class="space-y-2">
                 <Label for="businessName">Business Name *</Label>
                 <Input
+<<<<<<< HEAD
                     id="businessName"
                     v-model="businessInfo.businessName"
                     placeholder="Enter your business name"
                     :disabled="isLoading"
+=======
+                  id="businessName"
+                  v-model="businessInfo.businessName"
+                  placeholder="Enter your business name"
+                  :disabled="isLoading"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
                 />
               </div>
               <div class="space-y-2">
                 <Label for="businessType">Business Type *</Label>
                 <Input
+<<<<<<< HEAD
                     id="businessType"
                     v-model="businessInfo.businessType"
                     placeholder="e.g., Online Store, Restaurant"
                     :disabled="isLoading"
+=======
+                  id="businessType"
+                  v-model="businessInfo.businessType"
+                  placeholder="e.g., Online Store, Restaurant"
+                  :disabled="isLoading"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
                 />
               </div>
             </div>
@@ -276,30 +305,51 @@ const getStepDescription = (step: number) => {
             <div class="space-y-2">
               <Label for="address">Business Address *</Label>
               <Input
+<<<<<<< HEAD
                   id="address"
                   v-model="businessInfo.address"
                   placeholder="Enter your business address"
                   :disabled="isLoading"
+=======
+                id="address"
+                v-model="businessInfo.address"
+                placeholder="Enter your business address"
+                :disabled="isLoading"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
               />
             </div>
 
             <div class="space-y-2">
               <Label for="phone">Phone Number</Label>
               <Input
+<<<<<<< HEAD
                   id="phone"
                   v-model="businessInfo.phone"
                   placeholder="Enter your phone number"
                   :disabled="isLoading"
+=======
+                id="phone"
+                v-model="businessInfo.phone"
+                placeholder="Enter your phone number"
+                :disabled="isLoading"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
               />
             </div>
 
             <div class="space-y-2">
               <Label for="description">Business Description</Label>
               <Input
+<<<<<<< HEAD
                   id="description"
                   v-model="businessInfo.description"
                   placeholder="Brief description of your business"
                   :disabled="isLoading"
+=======
+                id="description"
+                v-model="businessInfo.description"
+                placeholder="Brief description of your business"
+                :disabled="isLoading"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
               />
             </div>
           </div>
@@ -309,6 +359,7 @@ const getStepDescription = (step: number) => {
             <p class="text-sm text-gray-600 mb-4">
               Choose the industry that best describes your business. This helps us customize your experience.
             </p>
+<<<<<<< HEAD
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div
@@ -316,6 +367,15 @@ const getStepDescription = (step: number) => {
                   :key="industry.id"
                   @click="selectedIndustry = industry.id"
                   :class="[
+=======
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div
+                v-for="industry in industries"
+                :key="industry.id"
+                @click="selectedIndustry = industry.id"
+                :class="[
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
                   'p-4 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md',
                   selectedIndustry === industry.id
                     ? 'border-blue-500 bg-blue-50'
@@ -349,6 +409,7 @@ const getStepDescription = (step: number) => {
 
             <div class="space-y-3">
               <div
+<<<<<<< HEAD
                   v-for="(member, index) in teamMembers"
                   :key="index"
                   class="flex items-center space-x-3 p-3 border rounded-lg"
@@ -369,6 +430,28 @@ const getStepDescription = (step: number) => {
                       v-model="member.role"
                       class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       :disabled="isLoading"
+=======
+                v-for="(member, index) in teamMembers"
+                :key="index"
+                class="flex items-center space-x-3 p-3 border rounded-lg"
+              >
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <Input
+                    v-model="member.name"
+                    placeholder="Full Name"
+                    :disabled="isLoading"
+                  />
+                  <Input
+                    v-model="member.email"
+                    type="email"
+                    placeholder="Email Address"
+                    :disabled="isLoading"
+                  />
+                  <select
+                    v-model="member.role"
+                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    :disabled="isLoading"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
                   >
                     <option value="manager">Manager</option>
                     <option value="staff">Staff</option>
@@ -376,11 +459,19 @@ const getStepDescription = (step: number) => {
                   </select>
                 </div>
                 <Button
+<<<<<<< HEAD
                     v-if="teamMembers.length > 1"
                     @click="removeTeamMember(index)"
                     variant="outline"
                     size="sm"
                     class="text-red-600 hover:text-red-700"
+=======
+                  v-if="teamMembers.length > 1"
+                  @click="removeTeamMember(index)"
+                  variant="outline"
+                  size="sm"
+                  class="text-red-600 hover:text-red-700"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
                 >
                   Remove
                 </Button>
@@ -449,9 +540,15 @@ const getStepDescription = (step: number) => {
                 </p>
                 <div v-if="teamMembers.some(m => m.email)" class="space-y-1">
                   <div
+<<<<<<< HEAD
                       v-for="member in teamMembers.filter(m => m.email)"
                       :key="member.email"
                       class="text-sm flex justify-between"
+=======
+                    v-for="member in teamMembers.filter(m => m.email)"
+                    :key="member.email"
+                    class="text-sm flex justify-between"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
                   >
                     <span>{{ member.name || member.email }}</span>
                     <Badge variant="outline" class="text-xs">{{ member.role }}</Badge>
@@ -465,10 +562,17 @@ const getStepDescription = (step: number) => {
           <!-- Navigation Buttons -->
           <div class="flex justify-between pt-6">
             <Button
+<<<<<<< HEAD
                 v-if="currentStep > 1"
                 @click="prevStep"
                 variant="outline"
                 :disabled="isLoading"
+=======
+              v-if="currentStep > 1"
+              @click="prevStep"
+              variant="outline"
+              :disabled="isLoading"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
             >
               <ArrowLeft class="h-4 w-4 mr-2" />
               Previous
@@ -476,18 +580,31 @@ const getStepDescription = (step: number) => {
             <div v-else></div>
 
             <Button
+<<<<<<< HEAD
                 v-if="currentStep < totalSteps"
                 @click="nextStep"
                 :disabled="!canProceed || isLoading"
+=======
+              v-if="currentStep < totalSteps"
+              @click="nextStep"
+              :disabled="!canProceed || isLoading"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
             >
               Next
               <ArrowRight class="h-4 w-4 ml-2" />
             </Button>
             <Button
+<<<<<<< HEAD
                 v-else
                 @click="completeOnboarding"
                 :disabled="isLoading"
                 class="bg-green-600 hover:bg-green-700"
+=======
+              v-else
+              @click="completeOnboarding"
+              :disabled="isLoading"
+              class="bg-green-600 hover:bg-green-700"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
             >
               <CheckCircle class="h-4 w-4 mr-2" />
               {{ isLoading ? 'Setting up...' : 'Complete Setup' }}

@@ -64,6 +64,7 @@ const getErrorMessage = (code: string): string => {
           <CardTitle class="text-3xl font-bold text-gray-900">Reset Password</CardTitle>
           <CardDescription>Enter your email to receive a reset link</CardDescription>
         </CardHeader>
+<<<<<<< HEAD
 
         <CardContent class="space-y-6">
           <!-- Loading Progress -->
@@ -113,6 +114,57 @@ const getErrorMessage = (code: string): string => {
             <router-link
                 to="/login"
                 class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+=======
+        
+        <CardContent class="space-y-6">
+          <!-- Loading Progress -->
+          <div v-if="isLoading" class="space-y-2">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-muted-foreground">Sending reset link...</span>
+              <span class="text-muted-foreground">{{ Math.round(progress) }}%</span>
+            </div>
+            <Progress :model-value="progress" class="h-2" />
+          </div>
+
+          <!-- Error Alert -->
+          <Alert v-if="errorMessage" variant="destructive">
+            <AlertDescription>{{ errorMessage }}</AlertDescription>
+          </Alert>
+
+          <!-- Success Alert -->
+          <Alert v-if="successMessage" class="bg-green-50 border-green-200">
+            <AlertDescription class="text-green-800">{{ successMessage }}</AlertDescription>
+          </Alert>
+
+          <!-- Reset Form -->
+          <form @submit.prevent="handleResetPassword" class="space-y-4">
+            <div class="space-y-2">
+              <Label for="email">Email</Label>
+              <Input
+                id="email"
+                v-model="email"
+                type="email"
+                placeholder="you@example.com"
+                required
+                :disabled="isLoading || !!successMessage"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              class="w-full"
+              :disabled="isLoading || !!successMessage"
+            >
+              {{ isLoading ? 'Sending...' : 'Send Reset Link' }}
+            </Button>
+          </form>
+
+          <!-- Back to Login Link -->
+          <div class="text-center">
+            <router-link
+              to="/login"
+              class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
             >
               ← Back to Login
             </router-link>

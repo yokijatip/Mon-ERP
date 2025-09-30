@@ -30,7 +30,7 @@ const handleLogin = async () => {
 
   try {
     await authStore.login(email.value, password.value)
-
+    
     // Redirect to the page they tried to access or home
     const redirect = route.query.redirect as string || '/'
     router.push(redirect)
@@ -67,6 +67,7 @@ const getErrorMessage = (code: string): string => {
           <CardTitle class="text-3xl font-bold text-gray-900">Welcome Back</CardTitle>
           <CardDescription>Sign in to your account to continue</CardDescription>
         </CardHeader>
+<<<<<<< HEAD
 
         <CardContent class="space-y-6">
           <!-- Loading Progress -->
@@ -126,13 +127,79 @@ const getErrorMessage = (code: string): string => {
             </Button>
           </form>
 
+=======
+        
+        <CardContent class="space-y-6">
+          <!-- Loading Progress -->
+          <div v-if="isLoading" class="space-y-2">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-muted-foreground">Signing in...</span>
+              <span class="text-muted-foreground">{{ Math.round(progress) }}%</span>
+            </div>
+            <Progress :model-value="progress" class="h-2" />
+          </div>
+
+          <!-- Error Alert -->
+          <Alert v-if="errorMessage" variant="destructive">
+            <AlertDescription>{{ errorMessage }}</AlertDescription>
+          </Alert>
+
+          <!-- Login Form -->
+          <form @submit.prevent="handleLogin" class="space-y-4">
+            <div class="space-y-2">
+              <Label for="email">Email</Label>
+              <Input
+                id="email"
+                v-model="email"
+                type="email"
+                placeholder="you@example.com"
+                required
+                :disabled="isLoading"
+              />
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <Label for="password">Password</Label>
+                <router-link
+                  to="/forgot-password"
+                  class="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  Forgot password?
+                </router-link>
+              </div>
+              <Input
+                id="password"
+                v-model="password"
+                type="password"
+                placeholder="••••••••"
+                required
+                :disabled="isLoading"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              class="w-full"
+              :disabled="isLoading"
+            >
+              {{ isLoading ? 'Signing in...' : 'Sign In' }}
+            </Button>
+          </form>
+
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
           <!-- Register Link -->
           <div class="text-center">
             <p class="text-sm text-gray-600">
               Don't have an account?
               <router-link
+<<<<<<< HEAD
                   to="/register"
                   class="text-blue-600 hover:text-blue-700 font-medium"
+=======
+                to="/register"
+                class="text-blue-600 hover:text-blue-700 font-medium"
+>>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
               >
                 Sign up
               </router-link>
