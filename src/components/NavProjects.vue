@@ -4,7 +4,6 @@ import {
   Folder,
   Forward,
   Plus,
-  MoreHorizontal,
   Trash2,
 } from "lucide-vue-next"
 

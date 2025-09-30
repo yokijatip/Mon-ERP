@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 
 export const authGuard = async (
     to: RouteLocationNormalized,
-    from: RouteLocationNormalized,
+    _from: RouteLocationNormalized,
     next: NavigationGuardNext
 ) => {
     const authStore = useAuthStore()
@@ -30,7 +30,7 @@ export const authGuard = async (
 
 export const onboardingGuard = async (
     to: RouteLocationNormalized,
-    from: RouteLocationNormalized,
+    _from: RouteLocationNormalized,
     next: NavigationGuardNext
 ) => {
     const authStore = useAuthStore()

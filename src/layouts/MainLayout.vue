@@ -21,7 +21,7 @@ const route = useRoute()
 
 // Computed property untuk breadcrumb dinamis dari route meta
 const breadcrumbs = computed(() => {
-  return route.meta.breadcrumb || []
+  return (route.meta.breadcrumb as Array<{path?: string; label: string}>) || []
 })
 </script>
 
