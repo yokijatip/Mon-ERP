@@ -74,80 +74,7 @@ const getErrorMessage = (code: string): string => {
           <CardTitle class="text-3xl font-bold text-gray-900">Create Account</CardTitle>
           <CardDescription>Sign up to get started</CardDescription>
         </CardHeader>
-<<<<<<< HEAD
 
-        <CardContent class="space-y-6">
-          <!-- Loading Progress -->
-          <div v-if="isLoading" class="space-y-2">
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-muted-foreground">Creating account...</span>
-              <span class="text-muted-foreground">{{ Math.round(progress) }}%</span>
-            </div>
-            <Progress :model-value="progress" class="h-2" />
-          </div>
-
-          <!-- Error Alert -->
-          <Alert v-if="errorMessage" variant="destructive">
-            <AlertDescription>{{ errorMessage }}</AlertDescription>
-          </Alert>
-
-          <!-- Register Form -->
-          <form @submit.prevent="handleRegister" class="space-y-4">
-            <div class="space-y-2">
-              <Label for="displayName">Full Name</Label>
-              <Input
-                  id="displayName"
-                  v-model="displayName"
-                  type="text"
-                  placeholder="John Doe"
-                  required
-                  :disabled="isLoading"
-              />
-            </div>
-
-            <div class="space-y-2">
-              <Label for="email">Email</Label>
-              <Input
-                  id="email"
-                  v-model="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  required
-                  :disabled="isLoading"
-              />
-            </div>
-
-            <div class="space-y-2">
-              <Label for="password">Password</Label>
-              <Input
-                  id="password"
-                  v-model="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  :disabled="isLoading"
-              />
-              <p class="text-xs text-gray-500">Must be at least 6 characters</p>
-            </div>
-
-            <div class="space-y-2">
-              <Label for="confirmPassword">Confirm Password</Label>
-              <Input
-                  id="confirmPassword"
-                  v-model="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  :disabled="isLoading"
-              />
-            </div>
-
-            <Button
-                type="submit"
-                class="w-full"
-                :disabled="isLoading"
-=======
-        
         <CardContent class="space-y-6">
           <!-- Loading Progress -->
           <div v-if="isLoading" class="space-y-2">
@@ -218,7 +145,7 @@ const getErrorMessage = (code: string): string => {
               type="submit"
               class="w-full"
               :disabled="isLoading"
->>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
+
             >
               {{ isLoading ? 'Creating account...' : 'Create Account' }}
             </Button>
@@ -229,13 +156,8 @@ const getErrorMessage = (code: string): string => {
             <p class="text-sm text-gray-600">
               Already have an account?
               <router-link
-<<<<<<< HEAD
                   to="/login"
                   class="text-blue-600 hover:text-blue-700 font-medium"
-=======
-                to="/login"
-                class="text-blue-600 hover:text-blue-700 font-medium"
->>>>>>> 21be25b26c919adbb0dcfd720be944bded451f22
               >
                 Sign in
               </router-link>
