@@ -104,9 +104,7 @@ const addOrganization = () => {
               <span class="text-xs text-muted-foreground">
                 {{ org.role }}
               </span>
-              <DropdownMenuShortcut>
-                <Check/>
-              </DropdownMenuShortcut>
+
             </DropdownMenuItem>
           </template>
 

@@ -115,9 +115,11 @@ export const useAuthStore = defineStore('auth', () => {
 
         // If not found or no access, set to first organization
         const orgIds = Object.keys(userProfile.value?.organizations || {})
-        if (orgIds.length > 0) {
-            activeOrganizationId.value = orgIds[0]
-            localStorage.setItem('activeOrganizationId', orgIds[0])
+        // After:
+        if (orgIds.length > 0 && orgIds[0]) {  // ✅ Check both length and first element
+            const firstOrgId = orgIds[0]  // ✅ Store in variable (TypeScript knows it's string now)
+            activeOrganizationId.value = firstOrgId
+            localStorage.setItem('activeOrganizationId', firstOrgId)
         }
     }
 
@@ -165,7 +167,7 @@ export const useAuthStore = defineStore('auth', () => {
             // Create user document in Firestore
             await setDoc(doc(db, 'users', userCredential.user.uid), {
                 id: userCredential.user.uid,
-                email: userCredential.user.email,
+                email: userCredential.user.email || '',
                 displayName,
                 photoURL: null,
                 phoneNumber: null,

@@ -116,7 +116,7 @@ const handleCreateOrganization = async () => {
 
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-    <div class="max-w-2xl mx-auto pt-8">
+    <div class="max-w-2xl mx-auto">
       <!-- Back Button -->
       <Button
           variant="ghost"
