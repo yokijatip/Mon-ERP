@@ -16,7 +16,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
-import {useAuthStore} from "@/stores/auth.ts";
 
 defineProps<{
   items: {

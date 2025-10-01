@@ -10,9 +10,9 @@ import {
     sendPasswordResetEmail,
     type User
 } from 'firebase/auth'
-import { doc, setDoc, getDoc } from 'firebase/firestore'
+import { doc, setDoc, getDoc, collection, getDocs, query, where } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
-import type { UserProfile } from '@/types/auth.ts'
+import type { UserProfile, Organization } from '@/types/auth.ts'
 
 export const useAuthStore = defineStore('auth', () => {
     // State
@@ -21,10 +21,22 @@ export const useAuthStore = defineStore('auth', () => {
     const loading = ref(true)
     const error = ref<string | null>(null)
 
+    // NEW: Active Organization
+    const activeOrganizationId = ref<string | null>(null)
+    const organizations = ref<Record<string, Organization>>({})
+
     // Getters
     const isAuthenticated = computed(() => !!user.value)
     const currentUser = computed(() => user.value)
     const userId = computed(() => user.value?.uid)
+    const activeOrganization = computed(() => {
+        if (!activeOrganizationId.value) return null
+        return organizations.value[activeOrganizationId.value] || null
+    })
+    const userOrganizations = computed(() => {
+        if (!userProfile.value?.organizations) return {}
+        return userProfile.value.organizations
+    })
 
     // Actions
     const initAuth = () => {
@@ -35,8 +47,14 @@ export const useAuthStore = defineStore('auth', () => {
                 if (firebaseUser) {
                     // Load user profile from Firestore
                     await loadUserProfile(firebaseUser.uid)
+                    // Load organizations
+                    await loadOrganizations()
+                    // Set active organization
+                    await loadActiveOrganization()
                 } else {
                     userProfile.value = null
+                    activeOrganizationId.value = null
+                    organizations.value = {}
                 }
 
                 loading.value = false
@@ -54,6 +72,83 @@ export const useAuthStore = defineStore('auth', () => {
         } catch (err: any) {
             console.error('Error loading user profile:', err)
         }
+    }
+
+    const loadOrganizations = async () => {
+        if (!userProfile.value?.organizations) return
+
+        try {
+            const orgIds = Object.keys(userProfile.value.organizations)
+
+            if (orgIds.length === 0) return
+
+            // Load all organizations user has access to
+            const orgsPromises = orgIds.map(async (orgId) => {
+                const orgDoc = await getDoc(doc(db, 'organizations', orgId))
+                if (orgDoc.exists()) {
+                    return { id: orgId, data: orgDoc.data() as Organization }
+                }
+                return null
+            })
+
+            const orgsResults = await Promise.all(orgsPromises)
+
+            organizations.value = {}
+            orgsResults.forEach((result) => {
+                if (result) {
+                    organizations.value[result.id] = result.data
+                }
+            })
+        } catch (err: any) {
+            console.error('Error loading organizations:', err)
+        }
+    }
+
+    const loadActiveOrganization = async () => {
+        // Try to load from localStorage
+        const storedOrgId = localStorage.getItem('activeOrganizationId')
+
+        if (storedOrgId && hasOrganizationAccess(storedOrgId)) {
+            activeOrganizationId.value = storedOrgId
+            return
+        }
+
+        // If not found or no access, set to first organization
+        const orgIds = Object.keys(userProfile.value?.organizations || {})
+        if (orgIds.length > 0) {
+            activeOrganizationId.value = orgIds[0]
+            localStorage.setItem('activeOrganizationId', orgIds[0])
+        }
+    }
+
+    const setActiveOrganization = (orgId: string) => {
+        if (!hasOrganizationAccess(orgId)) {
+            throw new Error('No access to this organization')
+        }
+
+        activeOrganizationId.value = orgId
+        localStorage.setItem('activeOrganizationId', orgId)
+    }
+
+    const hasOrganizationAccess = (orgId: string): boolean => {
+        if (!userProfile.value?.organizations) return false
+        return orgId in userProfile.value.organizations
+    }
+
+    const getOrgRole = (orgId: string) => {
+        if (!userProfile.value?.organizations || !userProfile.value.organizations[orgId]) {
+            return null
+        }
+        return userProfile.value.organizations[orgId].role
+    }
+
+    const isOrgOwner = (orgId: string): boolean => {
+        return getOrgRole(orgId) === 'owner'
+    }
+
+    const isOrgAdmin = (orgId: string): boolean => {
+        const role = getOrgRole(orgId)
+        return role === 'owner' || role === 'admin'
     }
 
     const register = async (email: string, password: string, displayName: string) => {
@@ -105,6 +200,8 @@ export const useAuthStore = defineStore('auth', () => {
             user.value = userCredential.user
 
             await loadUserProfile(userCredential.user.uid)
+            await loadOrganizations()
+            await loadActiveOrganization()
 
             return userCredential.user
         } catch (err: any) {
@@ -123,6 +220,11 @@ export const useAuthStore = defineStore('auth', () => {
             await signOut(auth)
             user.value = null
             userProfile.value = null
+            activeOrganizationId.value = null
+            organizations.value = {}
+
+            // Clear localStorage
+            localStorage.removeItem('activeOrganizationId')
         } catch (err: any) {
             error.value = err.message
             throw err
@@ -156,6 +258,8 @@ export const useAuthStore = defineStore('auth', () => {
             await setDoc(userRef, data, { merge: true })
 
             await loadUserProfile(user.value.uid)
+            await loadOrganizations()
+            await loadActiveOrganization()
         } catch (err: any) {
             error.value = err.message
             throw err
@@ -174,10 +278,14 @@ export const useAuthStore = defineStore('auth', () => {
         userProfile,
         loading,
         error,
+        activeOrganizationId,
+        organizations,
         // Getters
         isAuthenticated,
         currentUser,
         userId,
+        activeOrganization,
+        userOrganizations,
         // Actions
         initAuth,
         register,
@@ -186,6 +294,12 @@ export const useAuthStore = defineStore('auth', () => {
         resetPassword,
         updateUserProfile,
         loadUserProfile,
+        loadOrganizations,
+        setActiveOrganization,
+        hasOrganizationAccess,
+        getOrgRole,
+        isOrgOwner,
+        isOrgAdmin,
         clearError
     }
 })

@@ -29,22 +29,26 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 
+interface User {
+  name: string,
+  email: string,
+  avatar: string
+}
+
 defineProps<{
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
+  user: User
+}>()
+
+const emit = defineEmits<{
+  logout: []
 }>()
 
 const { isMobile } = useSidebar()
 
-// Konstantan auth
-const authStore = useAuthStore()
-
 const handleLogout = () => {
-  authStore.logout()
+  emit('logout')
 }
+
 </script>
 
 <template>
@@ -59,7 +63,7 @@ const handleLogout = () => {
             <Avatar class="h-8 w-8 rounded-lg">
               <AvatarImage :src="user.avatar" :alt="user.name" />
               <AvatarFallback class="rounded-lg">
-                CN
+                {{ user.name.substring(0, 2).toUpperCase() }}
               </AvatarFallback>
             </Avatar>
             <div class="grid flex-1 text-left text-sm leading-tight">
@@ -80,7 +84,7 @@ const handleLogout = () => {
               <Avatar class="h-8 w-8 rounded-lg">
                 <AvatarImage :src="user.avatar" :alt="user.name" />
                 <AvatarFallback class="rounded-lg">
-                  CN
+                  {{ user.name.substring(0, 2).toUpperCase() }}
                 </AvatarFallback>
               </Avatar>
               <div class="grid flex-1 text-left text-sm leading-tight">

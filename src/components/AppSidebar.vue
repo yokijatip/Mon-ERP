@@ -18,7 +18,7 @@ import {
 import NavMain from '@/components/NavMain.vue'
 import NavProjects from '@/components/NavProjects.vue'
 import NavUser from '@/components/NavUser.vue'
-import TeamSwitcher from '@/components/TeamSwitcher.vue'
+import OrganizationSwitcher from "@/components/OrganizationSwitcher.vue";
 import {
   Sidebar,
   SidebarContent,
@@ -26,12 +26,34 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar'
+import {useAuthStore} from "@/stores/auth.ts";
+import router from "@/router";
 
 const props = withDefaults(defineProps<SidebarProps>(), {
   collapsible: "icon",
 })
 
+
 const route = useRoute()
+const authStore = useAuthStore()
+
+// Handle Logout
+
+const handleLogout = async () => {
+  console.log('Logout Initiate')
+  try {
+    await authStore.logout()
+    router.push('/login')
+  } catch (error){
+    console.error('Logout Failed:', error)
+  }
+}
+
+const user = computed(() => ({
+  name: authStore.userProfile?.displayName || authStore.user?.displayName || 'User',
+  email: authStore.user?.email || '',
+  avatar: authStore.user?.photoURL || ''
+}))
 
 // Data sidebar
 const data = {
@@ -40,7 +62,7 @@ const data = {
     email: "admin@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
-  teams: [
+  organizationList: [
     {
       name: "Acme Inc",
       logo: GalleryVerticalEnd,
@@ -250,14 +272,14 @@ const navMainWithActive = computed(() => {
 <template>
   <Sidebar v-bind="props">
     <SidebarHeader>
-      <TeamSwitcher :teams="data.teams" />
+      <OrganizationSwitcher />
     </SidebarHeader>
     <SidebarContent>
       <NavMain :items="navMainWithActive" />
       <NavProjects :projects="data.projects" />
     </SidebarContent>
     <SidebarFooter>
-      <NavUser :user="data.user" />
+      <NavUser :user="user" @logout="handleLogout" />
     </SidebarFooter>
     <SidebarRail />
   </Sidebar>

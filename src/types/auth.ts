@@ -1,39 +1,81 @@
 // src/types/auth.ts
-import type { Timestamp } from 'firebase/firestore'
-
 export interface UserProfile {
     id: string
     email: string
     displayName: string
-    photoURL?: string | null
-    phoneNumber?: string | null
-
+    photoURL: string | null
+    phoneNumber: string | null
     profile: {
         fullName: string
-        position?: string | null
-        whatsapp?: string | null
+        position: string | null
+        whatsapp: string | null
     }
-
     organizations: {
         [orgId: string]: {
-            role: 'owner' | 'admin' | 'manager' | 'staff' | 'accountant' | 'viewer'
-            joinedAt: Timestamp | Date
-            status: 'active' | 'invited' | 'suspended'
-            invitedBy?: string
+            role: 'owner' | 'admin' | 'member'
+            joinedAt: Date
         }
     }
-
-    createdAt: Timestamp | Date
-    lastLoginAt: Timestamp | Date
+    createdAt: Date
+    lastLoginAt: Date
 }
 
-export interface LoginCredentials {
+export interface Organization {
+    id: string
+    name: string
+    type: 'company' | 'cv' | 'individual' | 'nonprofit'
+    address?: string
+    currency: string
+    taxRate: number
+    fiscalYearStart: number
+    ownerId: string
+    members: {
+        [userId: string]: {
+            role: 'owner' | 'admin' | 'member'
+            joinedAt: Date
+        }
+    }
+    logo?: string
+    createdAt: Date
+    updatedAt: Date
+}// src/types/auth.ts
+export interface UserProfile {
+    id: string
     email: string
-    password: string
-}
-
-export interface RegisterData {
-    email: string
-    password: string
     displayName: string
+    photoURL: string | null
+    phoneNumber: string | null
+    profile: {
+        fullName: string
+        position: string | null
+        whatsapp: string | null
+    }
+    organizations: {
+        [orgId: string]: {
+            role: 'owner' | 'admin' | 'member'
+            joinedAt: Date
+        }
+    }
+    createdAt: Date
+    lastLoginAt: Date
+}
+
+export interface Organization {
+    id: string
+    name: string
+    type: 'company' | 'cv' | 'individual' | 'nonprofit'
+    address?: string
+    currency: string
+    taxRate: number
+    fiscalYearStart: number
+    ownerId: string
+    members: {
+        [userId: string]: {
+            role: 'owner' | 'admin' | 'member'
+            joinedAt: Date
+        }
+    }
+    logo?: string
+    createdAt: Date
+    updatedAt: Date
 }
