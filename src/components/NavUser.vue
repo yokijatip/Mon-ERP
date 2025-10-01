@@ -38,6 +38,13 @@ defineProps<{
 }>()
 
 const { isMobile } = useSidebar()
+
+// Konstantan auth
+const authStore = useAuthStore()
+
+const handleLogout = () => {
+  authStore.logout()
+}
 </script>
 
 <template>
