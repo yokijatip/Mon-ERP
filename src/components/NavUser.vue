@@ -116,7 +116,7 @@ const handleLogout = () => {
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
+          <DropdownMenuItem @click="handleLogout" class="cursor-pointer">
             <LogOut />
             Log out
           </DropdownMenuItem>

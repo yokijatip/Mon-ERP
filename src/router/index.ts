@@ -33,6 +33,14 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true }
     },
 
+    // Add Organization (Authenticated users can add more orgs)
+    {
+        path: '/orgranization/add',
+        name: 'AddOrganization',
+        component: () => import('@/views/organization/AddOrganization.vue'),
+        meta: { requiresAuth: true }
+    },
+
     // Main Application Routes (Requires authentication)
     {
         path: '/',

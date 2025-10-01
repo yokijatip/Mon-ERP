@@ -74,10 +74,10 @@ const getErrorMessage = (code: string): string => {
           <div class="flex flex-col gap-6">
             <div class="flex flex-col items-center text-center">
               <h1 class="text-2xl font-bold">
-                Welcome back
+                Login to your account
               </h1>
-              <p class="text-muted-foreground text-balance">
-                Login to your ERP account
+              <p class="text-sm text-muted-foreground">
+                Enter your email below to login to your account
               </p>
             </div>
 

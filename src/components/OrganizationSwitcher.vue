@@ -112,12 +112,12 @@ const addOrganization = () => {
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem class="gap-2 p-2">
+          <DropdownMenuItem class="gap-2 p-2 cursor-pointer" @click="addOrganization">
             <div class="flex size-6 items-center justify-center rounded-md border bg-transparent">
               <Plus class="size-4" />
             </div>
             <div class="font-medium text-muted-foreground">
-              Add team
+              Add Organization
             </div>
           </DropdownMenuItem>
         </DropdownMenuContent>
