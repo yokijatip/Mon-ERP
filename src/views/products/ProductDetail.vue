@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ArrowLeft, Edit, Copy, Trash2, Package, CheckCircle, XCircle } from 'lucide-vue-next'
+import { ArrowLeft, CreditCard as Edit, Copy, Trash2, Package, CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 
 const router = useRouter()

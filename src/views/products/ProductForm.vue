@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
-import { ArrowLeft, Save, Loader2 } from 'lucide-vue-next'
+import { ArrowLeft, Save, Loader as Loader2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { Product } from '@/types/firestore'
 

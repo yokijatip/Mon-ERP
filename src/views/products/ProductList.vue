@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
-import { Plus, Search, MoreVertical, Edit, Trash2, Copy, Eye, Package } from 'lucide-vue-next'
+import { Plus, Search, MoveVertical as MoreVertical, CreditCard as Edit, Trash2, Copy, Eye, Package } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 
 const router = useRouter()
