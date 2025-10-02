@@ -41,6 +41,19 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true }
     },
 
+    // Buat Testing Composables
+    {
+        path: '/test/composables',
+        name: 'TestComposables',
+        component: () => import('@/views/test/TestComposables.vue'),
+        meta: {
+            breadcrumb: [
+                { label: 'Test' },
+                { label: 'Composables' }
+            ]
+        }
+    },
+
     // Main Application Routes (Requires authentication)
     {
         path: '/',

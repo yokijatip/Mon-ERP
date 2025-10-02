@@ -1,0 +1,269 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Get user's role in organization
+    function getOrgRole(orgId) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid))
+        .data.organizations[orgId].role;
+    }
+    
+    // Check if user is member of organization
+    function isMember(orgId) {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        orgId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizations;
+    }
+    
+    // Check if user is owner of organization
+    function isOrgOwner(orgId) {
+      return isMember(orgId) && getOrgRole(orgId) == 'owner';
+    }
+    
+    // Check if user is admin or owner
+    function isOrgAdmin(orgId) {
+      return isMember(orgId) && getOrgRole(orgId) in ['owner', 'admin'];
+    }
+    
+    // Check if document belongs to user's organization
+    function belongsToUserOrg() {
+      return isMember(resource.data.organizationId);
+    }
+    
+    // Validate required fields exist
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+    
+    // Check if user is creating their own document
+    function isCreatingSelf() {
+      return request.auth.uid == request.resource.data.id;
+    }
+    
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+    
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if isOwner(userId);
+      
+      // Users can create their own profile during registration
+      allow create: if isAuthenticated() && isCreatingSelf();
+      
+      // Users can update their own profile
+      allow update: if isOwner(userId);
+      
+      // No deletion allowed
+      allow delete: if false;
+    }
+    
+    // ============================================
+    // ORGANIZATIONS COLLECTION
+    // ============================================
+    
+    match /organizations/{orgId} {
+      // Members can read organization
+      allow read: if isMember(orgId);
+      
+      // Authenticated users can create organization
+      allow create: if isAuthenticated() && 
+        request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.members[request.auth.uid].role == 'owner';
+      
+      // Only owner can update organization
+      allow update: if isOrgOwner(orgId);
+      
+      // Only owner can delete (but we should soft-delete instead)
+      allow delete: if isOrgOwner(orgId);
+    }
+    
+    // ============================================
+    // ORGANIZATION SUB-COLLECTIONS
+    // ============================================
+    
+    // Generic rules for most sub-collections
+    // Members can read, Admins can write
+    match /organizations/{orgId}/{collection}/{docId} {
+      // Default: members can read
+      allow read: if isMember(orgId);
+      
+      // Default: admins can create/update/delete
+      allow create, update: if isOrgAdmin(orgId);
+      allow delete: if isOrgAdmin(orgId);
+      
+      // Specific rules for sensitive collections
+      
+      // ACCOUNTS (Chart of Accounts)
+      match /accounts/{accountId} {
+        allow read: if isMember(orgId);
+        allow write: if isOrgAdmin(orgId);
+        // Prevent deletion of system accounts
+        allow delete: if isOrgAdmin(orgId) && 
+          !resource.data.isSystemAccount;
+      }
+      
+      // JOURNALS
+      match /journals/{journalId} {
+        allow read: if isMember(orgId);
+        allow create: if isMember(orgId);
+        // Only creator or admin can update draft journals
+        allow update: if isMember(orgId) && (
+          resource.data.status == 'draft' && (
+            resource.data.createdBy == request.auth.uid ||
+            isOrgAdmin(orgId)
+          )
+        );
+        // Only admin can void posted journals
+        allow update: if isOrgAdmin(orgId) && 
+          request.resource.data.status == 'void';
+        // No deletion of posted journals
+        allow delete: if isOrgAdmin(orgId) && 
+          resource.data.status == 'draft';
+      }
+      
+      // PRODUCTS
+      match /products/{productId} {
+        allow read: if isMember(orgId);
+        allow write: if isOrgAdmin(orgId);
+      }
+      
+      // STOCK
+      match /stock/{stockId} {
+        allow read: if isMember(orgId);
+        // Only system should write stock levels
+        // Users create stock_movements instead
+        allow write: if false;
+      }
+      
+      // STOCK MOVEMENTS
+      match /stock_movements/{movementId} {
+        allow read: if isMember(orgId);
+        allow create: if isMember(orgId);
+        // Cannot update or delete stock movements (audit trail)
+        allow update, delete: if false;
+      }
+      
+      // CUSTOMERS
+      match /customers/{customerId} {
+        allow read: if isMember(orgId);
+        allow write: if isMember(orgId);
+      }
+      
+      // SUPPLIERS
+      match /suppliers/{supplierId} {
+        allow read: if isMember(orgId);
+        allow write: if isMember(orgId);
+      }
+      
+      // SALES ORDERS
+      match /sales_orders/{orderId} {
+        allow read: if isMember(orgId);
+        allow create: if isMember(orgId);
+        allow update: if isMember(orgId) && (
+          // Can update own draft orders
+          (resource.data.status == 'draft' && 
+           resource.data.createdBy == request.auth.uid) ||
+          // Admin can update any order
+          isOrgAdmin(orgId)
+        );
+        allow delete: if isOrgAdmin(orgId) && 
+          resource.data.status == 'draft';
+      }
+      
+      // INVOICES
+      match /invoices/{invoiceId} {
+        allow read: if isMember(orgId);
+        allow create: if isMember(orgId);
+        allow update: if isMember(orgId) && (
+          // Can update own draft invoices
+          (resource.data.status == 'draft' && 
+           resource.data.createdBy == request.auth.uid) ||
+          // Admin can update any invoice
+          isOrgAdmin(orgId)
+        );
+        // Cannot delete invoices (use void instead)
+        allow delete: if false;
+      }
+      
+      // PAYMENTS
+      match /payments/{paymentId} {
+        allow read: if isMember(orgId);
+        allow create: if isMember(orgId);
+        // Only admin can update/delete payments
+        allow update, delete: if isOrgAdmin(orgId);
+      }
+      
+      // PURCHASE ORDERS
+      match /purchase_orders/{poId} {
+        allow read: if isMember(orgId);
+        allow create: if isMember(orgId);
+        allow update: if isMember(orgId) && (
+          (resource.data.status == 'draft' && 
+           resource.data.createdBy == request.auth.uid) ||
+          isOrgAdmin(orgId)
+        );
+        allow delete: if isOrgAdmin(orgId) && 
+          resource.data.status == 'draft';
+      }
+      
+      // EMPLOYEES
+      match /employees/{employeeId} {
+        allow read: if isMember(orgId);
+        allow write: if isOrgAdmin(orgId);
+      }
+      
+      // ATTENDANCE
+      match /attendance/{attendanceId} {
+        allow read: if isMember(orgId);
+        // Employees can create their own attendance
+        allow create: if isMember(orgId);
+        // Only admin can update/approve
+        allow update: if isOrgAdmin(orgId);
+        allow delete: if isOrgAdmin(orgId);
+      }
+      
+      // PAYROLL
+      match /payroll/{payrollId} {
+        allow read: if isMember(orgId);
+        // Only admin can manage payroll
+        allow write: if isOrgAdmin(orgId);
+      }
+      
+      // WAREHOUSES
+      match /warehouses/{warehouseId} {
+        allow read: if isMember(orgId);
+        allow write: if isOrgAdmin(orgId);
+      }
+      
+      // SETTINGS
+      match /settings/general {
+        allow read: if isMember(orgId);
+        allow write: if isOrgAdmin(orgId);
+      }
+      
+      // AUDIT LOGS
+      match /audit_logs/{logId} {
+        // Only read access for members
+        allow read: if isMember(orgId);
+        // Only system should create audit logs
+        // (use Cloud Functions)
+        allow write: if false;
+      }
+    }
+  }
+}
