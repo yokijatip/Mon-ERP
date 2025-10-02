@@ -146,6 +146,10 @@ const data = {
           url: "/inventory/dashboard",
         },
         {
+          title: "Products",
+          url: "/products",
+        },
+        {
           title: "Stock Overview",
           url: "/inventory/stock-overview",
         },

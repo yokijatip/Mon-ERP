@@ -76,6 +76,54 @@ const routes: RouteRecordRaw[] = [
                     ]
                 }
             },
+            // Product Routes
+            {
+                path: 'products',
+                name: 'ProductList',
+                component: () => import('@/views/products/ProductList.vue'),
+                meta: {
+                    breadcrumb: [
+                        { label: 'Inventory', path: '/products' },
+                        { label: 'Products' }
+                    ]
+                }
+            },
+            {
+                path: 'products/create',
+                name: 'ProductCreate',
+                component: () => import('@/views/products/ProductForm.vue'),
+                meta: {
+                    breadcrumb: [
+                        { label: 'Inventory', path: '/products' },
+                        { label: 'Products', path: '/products' },
+                        { label: 'Create' }
+                    ]
+                }
+            },
+            {
+                path: 'products/:id',
+                name: 'ProductDetail',
+                component: () => import('@/views/products/ProductDetail.vue'),
+                meta: {
+                    breadcrumb: [
+                        { label: 'Inventory', path: '/products' },
+                        { label: 'Products', path: '/products' },
+                        { label: 'Detail' }
+                    ]
+                }
+            },
+            {
+                path: 'products/:id/edit',
+                name: 'ProductEdit',
+                component: () => import('@/views/products/ProductForm.vue'),
+                meta: {
+                    breadcrumb: [
+                        { label: 'Inventory', path: '/products' },
+                        { label: 'Products', path: '/products' },
+                        { label: 'Edit' }
+                    ]
+                }
+            },
             // Finance Routes
             {
                 path: 'finance/cash-flow',

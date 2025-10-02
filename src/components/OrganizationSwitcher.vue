@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import {type Component, computed} from "vue"
+import { computed} from "vue"
 
-import { ChevronsUpDown, Plus, Check } from "lucide-vue-next"
+import { ChevronsUpDown, Plus } from "lucide-vue-next"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
