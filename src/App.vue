@@ -13,7 +13,6 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Toaster/>
   <div v-if="authStore.loading" class="min-h-screen flex items-center justify-center">
     <div class="text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -21,6 +20,7 @@ onMounted(async () => {
     </div>
   </div>
   <RouterView v-else />
+  <Toaster />
 </template>
 
 <style scoped>

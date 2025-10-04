@@ -1,0 +1,2418 @@
+1. Financial Dashboard.vue:
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Wallet,
+  CreditCard,
+  ArrowUpRight,
+  ArrowDownRight,
+  Download,
+  AlertCircle,
+  Clock,
+  Building2,
+  Users2
+} from 'lucide-vue-next'
+import VueApexCharts from 'vue3-apexcharts'
+import Header from "@/components/kakangCustom/Header.vue"
+import { useAuthStore } from "@/stores/auth.ts"
+import type { DateRange } from "reka-ui"
+import type { Ref } from "vue"
+import {
+  CalendarDate,
+  DateFormatter,
+  getLocalTimeZone,
+} from "@internationalized/date"
+import { CalendarIcon } from "lucide-vue-next"
+import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { RangeCalendar } from "@/components/ui/range-calendar"
+import { toast } from "vue-sonner"
+
+// Date Picker Setup
+const df = new DateFormatter("en-US", {
+  dateStyle: "medium",
+})
+
+const value = ref({
+  start: new CalendarDate(2024, 10, 1),
+  end: new CalendarDate(2024, 10, 3),
+}) as Ref<DateRange>
+
+// Auth Store
+const authStore = useAuthStore()
+
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good Morning'
+  if (hour < 18) return 'Good Afternoon'
+  return 'Good Evening'
+})
+
+const userName = computed(() => {
+  return authStore.userProfile?.displayName || authStore.user?.displayName || 'User'
+})
+
+// Format Currency Helper
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value)
+}
+
+// Download Report Function
+const handleDownloadReport = () => {
+  const start = value.value?.start
+  const end = value.value?.end ?? start
+
+  if (!start) {
+    toast.error('Please pick a start date first.')
+    return
+  }
+
+  const toastId = toast.loading('Preparing financial report...')
+
+  setTimeout(() => {
+    toast.success('Financial report downloaded successfully!', {
+      id: toastId,
+      duration: 3000
+    })
+
+    console.log('Downloading financial report for:', {
+      start: start.toString(),
+      end: end?.toString(),
+    })
+  }, 1500)
+}
+
+// Financial KPI Data
+const financialKpis = ref([
+  {
+    title: 'Total Cash Balance',
+    value: 1850000000,
+    change: '+18.2%',
+    trend: 'up',
+    icon: Wallet,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50'
+  },
+  {
+    title: 'Accounts Receivable',
+    value: 456000000,
+    change: '+5.3%',
+    trend: 'up',
+    icon: DollarSign,
+    color: 'text-green-600',
+    bgColor: 'bg-green-50'
+  },
+  {
+    title: 'Accounts Payable',
+    value: 289000000,
+    change: '-12.1%',
+    trend: 'down',
+    icon: CreditCard,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50'
+  },
+  {
+    title: 'Net Profit Margin',
+    value: 28.5,
+    change: '+3.2%',
+    trend: 'up',
+    icon: TrendingUp,
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50',
+    isPercentage: true
+  }
+])
+
+// Cash Flow Chart
+const cashFlowOptions = ref({
+  chart: {
+    id: 'cash-flow-chart',
+    type: 'area',
+    height: 350,
+    toolbar: { show: false },
+    fontFamily: 'inherit'
+  },
+  dataLabels: { enabled: false },
+  stroke: { curve: 'smooth', width: 2 },
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  },
+  colors: ['#10b981', '#ef4444', '#3b82f6'],
+  fill: {
+    type: 'gradient',
+    gradient: {
+      shadeIntensity: 1,
+      opacityFrom: 0.4,
+      opacityTo: 0.1,
+    }
+  },
+  legend: { position: 'top', horizontalAlign: 'right' },
+  yaxis: {
+    labels: {
+      formatter: (val: number) => {
+        if (val >= 1000000000) return `Rp ${(val / 1000000000).toFixed(1)}M`
+        if (val >= 1000000) return `Rp ${(val / 1000000).toFixed(0)}jt`
+        return `Rp ${(val / 1000).toFixed(0)}rb`
+      }
+    }
+  },
+  tooltip: {
+    y: {
+      formatter: (val: number) => formatCurrency(val)
+    }
+  }
+})
+
+const cashFlowSeries = ref([
+  {
+    name: 'Cash Inflow',
+    data: [125000000, 138000000, 142000000, 155000000, 148000000, 165000000, 178000000, 172000000, 185000000, 195000000, 188000000, 205000000]
+  },
+  {
+    name: 'Cash Outflow',
+    data: [95000000, 102000000, 98000000, 115000000, 108000000, 122000000, 135000000, 128000000, 138000000, 145000000, 142000000, 155000000]
+  },
+  {
+    name: 'Net Cash Flow',
+    data: [30000000, 36000000, 44000000, 40000000, 40000000, 43000000, 43000000, 44000000, 47000000, 50000000, 46000000, 50000000]
+  }
+])
+
+// Expense Breakdown Chart
+const expenseBreakdownOptions = ref({
+  chart: {
+    type: 'donut',
+    height: 320,
+    fontFamily: 'inherit'
+  },
+  labels: ['Operational', 'Salaries', 'Marketing', 'R&D', 'Utilities', 'Others'],
+  colors: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6b7280'],
+  legend: { position: 'bottom' },
+  dataLabels: { enabled: true },
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '70%',
+        labels: {
+          show: true,
+          total: {
+            show: true,
+            label: 'Total Expenses',
+            formatter: () => 'Rp 155jt'
+          }
+        }
+      }
+    }
+  },
+  tooltip: {
+    y: {
+      formatter: (val: number) => formatCurrency(val)
+    }
+  }
+})
+
+const expenseBreakdownSeries = ref([45000000, 55000000, 25000000, 15000000, 10000000, 5000000])
+
+// Revenue vs Expense Chart
+const revenueExpenseOptions = ref({
+  chart: {
+    type: 'bar',
+    height: 320,
+    toolbar: { show: false },
+    fontFamily: 'inherit'
+  },
+  plotOptions: {
+    bar: {
+      horizontal: false,
+      columnWidth: '55%',
+      borderRadius: 4
+    }
+  },
+  dataLabels: { enabled: false },
+  stroke: { show: true, width: 2, colors: ['transparent'] },
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  },
+  colors: ['#10b981', '#ef4444'],
+  fill: { opacity: 1 },
+  legend: { position: 'top', horizontalAlign: 'right' },
+  yaxis: {
+    labels: {
+      formatter: (val: number) => {
+        if (val >= 1000000000) return `${(val / 1000000000).toFixed(1)}M`
+        if (val >= 1000000) return `${(val / 1000000).toFixed(0)}jt`
+        return `${(val / 1000).toFixed(0)}rb`
+      }
+    }
+  },
+  tooltip: {
+    y: {
+      formatter: (val: number) => formatCurrency(val)
+    }
+  }
+})
+
+const revenueExpenseSeries = ref([
+  {
+    name: 'Revenue',
+    data: [125000000, 138000000, 142000000, 155000000, 148000000, 165000000, 178000000, 172000000, 185000000, 195000000, 188000000, 205000000]
+  },
+  {
+    name: 'Expenses',
+    data: [95000000, 102000000, 98000000, 115000000, 108000000, 122000000, 135000000, 128000000, 138000000, 145000000, 142000000, 155000000]
+  }
+])
+
+// Accounts Receivable
+const accountsReceivable = ref([
+  { customer: 'PT Maju Jaya', invoice: 'INV-2024-001', amount: 125000000, dueDate: '2024-10-10', status: 'overdue', days: 5 },
+  { customer: 'CV Sukses Mandiri', invoice: 'INV-2024-002', amount: 85000000, dueDate: '2024-10-15', status: 'pending', days: 12 },
+  { customer: 'Toko Berkah', invoice: 'INV-2024-003', amount: 45000000, dueDate: '2024-10-08', status: 'overdue', days: 2 },
+  { customer: 'UD Sejahtera', invoice: 'INV-2024-004', amount: 95000000, dueDate: '2024-10-20', status: 'pending', days: 17 },
+  { customer: 'PT Global Tech', invoice: 'INV-2024-005', amount: 106000000, dueDate: '2024-10-25', status: 'pending', days: 22 }
+])
+
+// Accounts Payable
+const accountsPayable = ref([
+  { vendor: 'PT Supplier Utama', invoice: 'BILL-2024-001', amount: 75000000, dueDate: '2024-10-12', status: 'pending', days: 9 },
+  { vendor: 'CV Material Indo', invoice: 'BILL-2024-002', amount: 52000000, dueDate: '2024-10-18', status: 'pending', days: 15 },
+  { vendor: 'Toko Bahan Baku', invoice: 'BILL-2024-003', amount: 38000000, dueDate: '2024-10-22', status: 'pending', days: 19 },
+  { vendor: 'PT Logistik Cepat', invoice: 'BILL-2024-004', amount: 64000000, dueDate: '2024-10-28', status: 'pending', days: 25 },
+  { vendor: 'CV Packaging Pro', invoice: 'BILL-2024-005', amount: 60000000, dueDate: '2024-11-05', status: 'pending', days: 33 }
+])
+
+// Recent Transactions
+const recentTransactions = ref([
+  { id: 'TRX-2024-001', type: 'income', description: 'Payment from PT Maju Jaya', amount: 125000000, date: '2024-10-03', category: 'Sales' },
+  { id: 'TRX-2024-002', type: 'expense', description: 'Salary Payment - October', amount: 55000000, date: '2024-10-03', category: 'Payroll' },
+  { id: 'TRX-2024-003', type: 'income', description: 'Payment from CV Sukses Mandiri', amount: 85000000, date: '2024-10-02', category: 'Sales' },
+  { id: 'TRX-2024-004', type: 'expense', description: 'Office Rent - October', amount: 15000000, date: '2024-10-02', category: 'Operational' },
+  { id: 'TRX-2024-005', type: 'expense', description: 'Marketing Campaign', amount: 12000000, date: '2024-10-01', category: 'Marketing' },
+  { id: 'TRX-2024-006', type: 'income', description: 'Payment from Toko Berkah', amount: 45000000, date: '2024-10-01', category: 'Sales' }
+])
+
+const getStatusColor = (status: string) => {
+  const colors: Record<string, string> = {
+    paid: 'bg-green-100 text-green-800',
+    pending: 'bg-yellow-100 text-yellow-800',
+    overdue: 'bg-red-100 text-red-800',
+    cancelled: 'bg-gray-100 text-gray-800'
+  }
+  return colors[status] || 'bg-gray-100 text-gray-800'
+}
+
+const getTransactionColor = (type: string) => {
+  return type === 'income' ? 'text-green-600' : 'text-red-600'
+}
+
+const getTransactionIcon = (type: string) => {
+  return type === 'income' ? ArrowDownRight : ArrowUpRight
+}
+</script>
+
+<template>
+  <div class="space-y-6">
+    <!-- Header with Date Picker -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <Header
+          title="Finance Dashboard"
+          :subtitle="`${greeting}, ${userName}!`"
+          align="left"
+      />
+
+      <!-- Date Picker & Button -->
+      <div class="flex items-center gap-2">
+        <Popover>
+          <PopoverTrigger as-child>
+            <Button
+                variant="outline"
+                :class="cn(
+                  'w-[230px] justify-start text-left font-normal',
+                  !value && 'text-muted-foreground',
+                )"
+            >
+              <CalendarIcon class="mr-2 h-4 w-4" />
+              <template v-if="value.start">
+                <template v-if="value.end">
+                  {{ df.format(value.start.toDate(getLocalTimeZone())) }} - {{ df.format(value.end.toDate(getLocalTimeZone())) }}
+                </template>
+                <template v-else>
+                  {{ df.format(value.start.toDate(getLocalTimeZone())) }}
+                </template>
+              </template>
+              <template v-else>
+                Pick a date
+              </template>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent class="w-auto p-0">
+            <RangeCalendar
+                v-model="value"
+                initial-focus
+                :number-of-months="2"
+                @update:start-value="(startDate) => value.start = startDate"
+            />
+          </PopoverContent>
+        </Popover>
+
+        <!-- Download Report -->
+        <Button @click="handleDownloadReport">
+          <Download class="mr-2 h-4 w-4" />
+          Export Report
+        </Button>
+      </div>
+    </div>
+
+    <!-- Financial KPI Cards -->
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card v-for="kpi in financialKpis" :key="kpi.title">
+        <CardHeader class="flex flex-row items-center justify-between space-y-0">
+          <CardTitle class="text-sm font-medium">{{ kpi.title }}</CardTitle>
+          <div :class="[kpi.bgColor, 'p-2 rounded-lg']">
+            <component :is="kpi.icon" :class="[kpi.color, 'w-4 h-4']" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div class="text-xl font-bold">
+            {{ kpi.isPercentage ? `${kpi.value}%` : formatCurrency(kpi.value) }}
+          </div>
+          <div class="flex items-center text-sm">
+            <component
+                :is="kpi.trend === 'up' ? ArrowUpRight : ArrowDownRight"
+                :class="[kpi.trend === 'up' ? 'text-green-600' : 'text-red-600', 'w-4 h-4 mr-1']"
+            />
+            <span :class="kpi.trend === 'up' ? 'text-green-600' : 'text-red-600'">
+              {{ kpi.change }}
+            </span>
+            <span class="text-muted-foreground ml-1">vs last month</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Main Charts Row -->
+    <div class="grid gap-4 md:grid-cols-7">
+      <!-- Cash Flow Chart -->
+      <Card class="md:col-span-4">
+        <CardHeader>
+          <CardTitle>Cash Flow Analysis</CardTitle>
+          <CardDescription>Monthly cash inflow, outflow, and net cash flow for 2024</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <VueApexCharts
+              type="area"
+              height="350"
+              :options="cashFlowOptions"
+              :series="cashFlowSeries"
+          />
+        </CardContent>
+      </Card>
+
+      <!-- Expense Breakdown -->
+      <Card class="md:col-span-3">
+        <CardHeader>
+          <CardTitle>Expense Breakdown</CardTitle>
+          <CardDescription>Distribution of expenses by category</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <VueApexCharts
+              type="donut"
+              height="320"
+              :options="expenseBreakdownOptions"
+              :series="expenseBreakdownSeries"
+          />
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Revenue vs Expense Chart -->
+    <Card>
+      <CardHeader>
+        <CardTitle>Revenue vs Expenses</CardTitle>
+        <CardDescription>Monthly comparison of revenue and expenses</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <VueApexCharts
+            type="bar"
+            height="320"
+            :options="revenueExpenseOptions"
+            :series="revenueExpenseSeries"
+        />
+      </CardContent>
+    </Card>
+
+    <!-- Accounts Receivable & Payable Row -->
+    <div class="grid gap-4 md:grid-cols-2">
+      <!-- Accounts Receivable -->
+      <Card>
+        <CardHeader>
+          <div class="flex items-center justify-between">
+            <div>
+              <CardTitle>Accounts Receivable</CardTitle>
+              <CardDescription>Outstanding customer invoices</CardDescription>
+            </div>
+            <Badge variant="outline" class="text-lg font-semibold">
+              {{ formatCurrency(456000000) }}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div class="space-y-3">
+            <div
+                v-for="ar in accountsReceivable"
+                :key="ar.invoice"
+                class="flex items-center justify-between p-3 rounded-lg border"
+                :class="ar.status === 'overdue' ? 'border-red-200 bg-red-50/30' : ''"
+            >
+              <div class="space-y-1 flex-1">
+                <div class="flex items-center gap-2">
+                  <Building2 class="w-4 h-4 text-muted-foreground" />
+                  <p class="font-medium">{{ ar.customer }}</p>
+                </div>
+                <p class="text-sm text-muted-foreground">{{ ar.invoice }}</p>
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock class="w-3 h-3" />
+                  <span>Due: {{ ar.dueDate }} ({{ ar.days }} days)</span>
+                </div>
+              </div>
+              <div class="text-right space-y-2">
+                <p class="font-semibold">{{ formatCurrency(ar.amount) }}</p>
+                <Badge :class="getStatusColor(ar.status)" class="capitalize">
+                  {{ ar.status }}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Accounts Payable -->
+      <Card>
+        <CardHeader>
+          <div class="flex items-center justify-between">
+            <div>
+              <CardTitle>Accounts Payable</CardTitle>
+              <CardDescription>Outstanding vendor bills</CardDescription>
+            </div>
+            <Badge variant="outline" class="text-lg font-semibold">
+              {{ formatCurrency(289000000) }}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div class="space-y-3">
+            <div
+                v-for="ap in accountsPayable"
+                :key="ap.invoice"
+                class="flex items-center justify-between p-3 rounded-lg border"
+            >
+              <div class="space-y-1 flex-1">
+                <div class="flex items-center gap-2">
+                  <Users2 class="w-4 h-4 text-muted-foreground" />
+                  <p class="font-medium">{{ ap.vendor }}</p>
+                </div>
+                <p class="text-sm text-muted-foreground">{{ ap.invoice }}</p>
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock class="w-3 h-3" />
+                  <span>Due: {{ ap.dueDate }} ({{ ap.days }} days)</span>
+                </div>
+              </div>
+              <div class="text-right space-y-2">
+                <p class="font-semibold">{{ formatCurrency(ap.amount) }}</p>
+                <Badge :class="getStatusColor(ap.status)" class="capitalize">
+                  {{ ap.status }}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Recent Transactions -->
+    <Card>
+      <CardHeader>
+        <CardTitle>Recent Transactions</CardTitle>
+        <CardDescription>Latest financial transactions</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div class="space-y-3">
+          <div
+              v-for="transaction in recentTransactions"
+              :key="transaction.id"
+              class="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+          >
+            <div class="flex items-center gap-3 flex-1">
+              <div :class="[
+                transaction.type === 'income' ? 'bg-green-50' : 'bg-red-50',
+                'p-2 rounded-lg'
+              ]">
+                <component
+                    :is="getTransactionIcon(transaction.type)"
+                    :class="[getTransactionColor(transaction.type), 'w-4 h-4']"
+                />
+              </div>
+              <div class="flex-1">
+                <p class="font-medium">{{ transaction.description }}</p>
+                <div class="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                  <span>{{ transaction.id }}</span>
+                  <span>•</span>
+                  <span>{{ transaction.date }}</span>
+                  <span>•</span>
+                  <Badge variant="outline" class="text-xs">{{ transaction.category }}</Badge>
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <p :class="[
+                'font-semibold text-lg',
+                getTransactionColor(transaction.type)
+              ]">
+                {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+</template>
+
+<style scoped>
+
+</style>
+
+2. FinancialReports.vue:
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Wallet,
+  CreditCard,
+  ArrowUpRight,
+  ArrowDownRight,
+  Download,
+  AlertCircle,
+  Clock,
+  Building2,
+  Users2
+} from 'lucide-vue-next'
+import VueApexCharts from 'vue3-apexcharts'
+import Header from "@/components/kakangCustom/Header.vue"
+import { useAuthStore } from "@/stores/auth.ts"
+import type { DateRange } from "reka-ui"
+import type { Ref } from "vue"
+import {
+  CalendarDate,
+  DateFormatter,
+  getLocalTimeZone,
+} from "@internationalized/date"
+import { CalendarIcon } from "lucide-vue-next"
+import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { RangeCalendar } from "@/components/ui/range-calendar"
+import { toast } from "vue-sonner"
+
+// Date Picker Setup
+const df = new DateFormatter("en-US", {
+  dateStyle: "medium",
+})
+
+const value = ref({
+  start: new CalendarDate(2024, 10, 1),
+  end: new CalendarDate(2024, 10, 3),
+}) as Ref<DateRange>
+
+// Auth Store
+const authStore = useAuthStore()
+
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good Morning'
+  if (hour < 18) return 'Good Afternoon'
+  return 'Good Evening'
+})
+
+const userName = computed(() => {
+  return authStore.userProfile?.displayName || authStore.user?.displayName || 'User'
+})
+
+// Format Currency Helper
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value)
+}
+
+// Download Report Function
+const handleDownloadReport = () => {
+  const start = value.value?.start
+  const end = value.value?.end ?? start
+
+  if (!start) {
+    toast.error('Please pick a start date first.')
+    return
+  }
+
+  const toastId = toast.loading('Preparing financial report...')
+
+  setTimeout(() => {
+    toast.success('Financial report downloaded successfully!', {
+      id: toastId,
+      duration: 3000
+    })
+
+    console.log('Downloading financial report for:', {
+      start: start.toString(),
+      end: end?.toString(),
+    })
+  }, 1500)
+}
+
+// Financial KPI Data
+const financialKpis = ref([
+  {
+    title: 'Total Cash Balance',
+    value: 1850000000,
+    change: '+18.2%',
+    trend: 'up',
+    icon: Wallet,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50'
+  },
+  {
+    title: 'Accounts Receivable',
+    value: 456000000,
+    change: '+5.3%',
+    trend: 'up',
+    icon: DollarSign,
+    color: 'text-green-600',
+    bgColor: 'bg-green-50'
+  },
+  {
+    title: 'Accounts Payable',
+    value: 289000000,
+    change: '-12.1%',
+    trend: 'down',
+    icon: CreditCard,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50'
+  },
+  {
+    title: 'Net Profit Margin',
+    value: 28.5,
+    change: '+3.2%',
+    trend: 'up',
+    icon: TrendingUp,
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50',
+    isPercentage: true
+  }
+])
+
+// Cash Flow Chart
+const cashFlowOptions = ref({
+  chart: {
+    id: 'cash-flow-chart',
+    type: 'area',
+    height: 350,
+    toolbar: { show: false },
+    fontFamily: 'inherit'
+  },
+  dataLabels: { enabled: false },
+  stroke: { curve: 'smooth', width: 2 },
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  },
+  colors: ['#10b981', '#ef4444', '#3b82f6'],
+  fill: {
+    type: 'gradient',
+    gradient: {
+      shadeIntensity: 1,
+      opacityFrom: 0.4,
+      opacityTo: 0.1,
+    }
+  },
+  legend: { position: 'top', horizontalAlign: 'right' },
+  yaxis: {
+    labels: {
+      formatter: (val: number) => {
+        if (val >= 1000000000) return `Rp ${(val / 1000000000).toFixed(1)}M`
+        if (val >= 1000000) return `Rp ${(val / 1000000).toFixed(0)}jt`
+        return `Rp ${(val / 1000).toFixed(0)}rb`
+      }
+    }
+  },
+  tooltip: {
+    y: {
+      formatter: (val: number) => formatCurrency(val)
+    }
+  }
+})
+
+const cashFlowSeries = ref([
+  {
+    name: 'Cash Inflow',
+    data: [125000000, 138000000, 142000000, 155000000, 148000000, 165000000, 178000000, 172000000, 185000000, 195000000, 188000000, 205000000]
+  },
+  {
+    name: 'Cash Outflow',
+    data: [95000000, 102000000, 98000000, 115000000, 108000000, 122000000, 135000000, 128000000, 138000000, 145000000, 142000000, 155000000]
+  },
+  {
+    name: 'Net Cash Flow',
+    data: [30000000, 36000000, 44000000, 40000000, 40000000, 43000000, 43000000, 44000000, 47000000, 50000000, 46000000, 50000000]
+  }
+])
+
+// Expense Breakdown Chart
+const expenseBreakdownOptions = ref({
+  chart: {
+    type: 'donut',
+    height: 320,
+    fontFamily: 'inherit'
+  },
+  labels: ['Operational', 'Salaries', 'Marketing', 'R&D', 'Utilities', 'Others'],
+  colors: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6b7280'],
+  legend: { position: 'bottom' },
+  dataLabels: { enabled: true },
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '70%',
+        labels: {
+          show: true,
+          total: {
+            show: true,
+            label: 'Total Expenses',
+            formatter: () => 'Rp 155jt'
+          }
+        }
+      }
+    }
+  },
+  tooltip: {
+    y: {
+      formatter: (val: number) => formatCurrency(val)
+    }
+  }
+})
+
+const expenseBreakdownSeries = ref([45000000, 55000000, 25000000, 15000000, 10000000, 5000000])
+
+// Revenue vs Expense Chart
+const revenueExpenseOptions = ref({
+  chart: {
+    type: 'bar',
+    height: 320,
+    toolbar: { show: false },
+    fontFamily: 'inherit'
+  },
+  plotOptions: {
+    bar: {
+      horizontal: false,
+      columnWidth: '55%',
+      borderRadius: 4
+    }
+  },
+  dataLabels: { enabled: false },
+  stroke: { show: true, width: 2, colors: ['transparent'] },
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  },
+  colors: ['#10b981', '#ef4444'],
+  fill: { opacity: 1 },
+  legend: { position: 'top', horizontalAlign: 'right' },
+  yaxis: {
+    labels: {
+      formatter: (val: number) => {
+        if (val >= 1000000000) return `${(val / 1000000000).toFixed(1)}M`
+        if (val >= 1000000) return `${(val / 1000000).toFixed(0)}jt`
+        return `${(val / 1000).toFixed(0)}rb`
+      }
+    }
+  },
+  tooltip: {
+    y: {
+      formatter: (val: number) => formatCurrency(val)
+    }
+  }
+})
+
+const revenueExpenseSeries = ref([
+  {
+    name: 'Revenue',
+    data: [125000000, 138000000, 142000000, 155000000, 148000000, 165000000, 178000000, 172000000, 185000000, 195000000, 188000000, 205000000]
+  },
+  {
+    name: 'Expenses',
+    data: [95000000, 102000000, 98000000, 115000000, 108000000, 122000000, 135000000, 128000000, 138000000, 145000000, 142000000, 155000000]
+  }
+])
+
+// Accounts Receivable
+const accountsReceivable = ref([
+  { customer: 'PT Maju Jaya', invoice: 'INV-2024-001', amount: 125000000, dueDate: '2024-10-10', status: 'overdue', days: 5 },
+  { customer: 'CV Sukses Mandiri', invoice: 'INV-2024-002', amount: 85000000, dueDate: '2024-10-15', status: 'pending', days: 12 },
+  { customer: 'Toko Berkah', invoice: 'INV-2024-003', amount: 45000000, dueDate: '2024-10-08', status: 'overdue', days: 2 },
+  { customer: 'UD Sejahtera', invoice: 'INV-2024-004', amount: 95000000, dueDate: '2024-10-20', status: 'pending', days: 17 },
+  { customer: 'PT Global Tech', invoice: 'INV-2024-005', amount: 106000000, dueDate: '2024-10-25', status: 'pending', days: 22 }
+])
+
+// Accounts Payable
+const accountsPayable = ref([
+  { vendor: 'PT Supplier Utama', invoice: 'BILL-2024-001', amount: 75000000, dueDate: '2024-10-12', status: 'pending', days: 9 },
+  { vendor: 'CV Material Indo', invoice: 'BILL-2024-002', amount: 52000000, dueDate: '2024-10-18', status: 'pending', days: 15 },
+  { vendor: 'Toko Bahan Baku', invoice: 'BILL-2024-003', amount: 38000000, dueDate: '2024-10-22', status: 'pending', days: 19 },
+  { vendor: 'PT Logistik Cepat', invoice: 'BILL-2024-004', amount: 64000000, dueDate: '2024-10-28', status: 'pending', days: 25 },
+  { vendor: 'CV Packaging Pro', invoice: 'BILL-2024-005', amount: 60000000, dueDate: '2024-11-05', status: 'pending', days: 33 }
+])
+
+// Recent Transactions
+const recentTransactions = ref([
+  { id: 'TRX-2024-001', type: 'income', description: 'Payment from PT Maju Jaya', amount: 125000000, date: '2024-10-03', category: 'Sales' },
+  { id: 'TRX-2024-002', type: 'expense', description: 'Salary Payment - October', amount: 55000000, date: '2024-10-03', category: 'Payroll' },
+  { id: 'TRX-2024-003', type: 'income', description: 'Payment from CV Sukses Mandiri', amount: 85000000, date: '2024-10-02', category: 'Sales' },
+  { id: 'TRX-2024-004', type: 'expense', description: 'Office Rent - October', amount: 15000000, date: '2024-10-02', category: 'Operational' },
+  { id: 'TRX-2024-005', type: 'expense', description: 'Marketing Campaign', amount: 12000000, date: '2024-10-01', category: 'Marketing' },
+  { id: 'TRX-2024-006', type: 'income', description: 'Payment from Toko Berkah', amount: 45000000, date: '2024-10-01', category: 'Sales' }
+])
+
+const getStatusColor = (status: string) => {
+  const colors: Record<string, string> = {
+    paid: 'bg-green-100 text-green-800',
+    pending: 'bg-yellow-100 text-yellow-800',
+    overdue: 'bg-red-100 text-red-800',
+    cancelled: 'bg-gray-100 text-gray-800'
+  }
+  return colors[status] || 'bg-gray-100 text-gray-800'
+}
+
+const getTransactionColor = (type: string) => {
+  return type === 'income' ? 'text-green-600' : 'text-red-600'
+}
+
+const getTransactionIcon = (type: string) => {
+  return type === 'income' ? ArrowDownRight : ArrowUpRight
+}
+</script>
+
+<template>
+  <div class="space-y-6">
+    <!-- Header with Date Picker -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <Header
+          title="Finance Dashboard"
+          :subtitle="`${greeting}, ${userName}!`"
+          align="left"
+      />
+
+      <!-- Date Picker & Button -->
+      <div class="flex items-center gap-2">
+        <Popover>
+          <PopoverTrigger as-child>
+            <Button
+                variant="outline"
+                :class="cn(
+                  'w-[230px] justify-start text-left font-normal',
+                  !value && 'text-muted-foreground',
+                )"
+            >
+              <CalendarIcon class="mr-2 h-4 w-4" />
+              <template v-if="value.start">
+                <template v-if="value.end">
+                  {{ df.format(value.start.toDate(getLocalTimeZone())) }} - {{ df.format(value.end.toDate(getLocalTimeZone())) }}
+                </template>
+                <template v-else>
+                  {{ df.format(value.start.toDate(getLocalTimeZone())) }}
+                </template>
+              </template>
+              <template v-else>
+                Pick a date
+              </template>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent class="w-auto p-0">
+            <RangeCalendar
+                v-model="value"
+                initial-focus
+                :number-of-months="2"
+                @update:start-value="(startDate) => value.start = startDate"
+            />
+          </PopoverContent>
+        </Popover>
+
+        <!-- Download Report -->
+        <Button @click="handleDownloadReport">
+          <Download class="mr-2 h-4 w-4" />
+          Export Report
+        </Button>
+      </div>
+    </div>
+
+    <!-- Financial KPI Cards -->
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card v-for="kpi in financialKpis" :key="kpi.title">
+        <CardHeader class="flex flex-row items-center justify-between space-y-0">
+          <CardTitle class="text-sm font-medium">{{ kpi.title }}</CardTitle>
+          <div :class="[kpi.bgColor, 'p-2 rounded-lg']">
+            <component :is="kpi.icon" :class="[kpi.color, 'w-4 h-4']" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div class="text-xl font-bold">
+            {{ kpi.isPercentage ? `${kpi.value}%` : formatCurrency(kpi.value) }}
+          </div>
+          <div class="flex items-center text-sm">
+            <component
+                :is="kpi.trend === 'up' ? ArrowUpRight : ArrowDownRight"
+                :class="[kpi.trend === 'up' ? 'text-green-600' : 'text-red-600', 'w-4 h-4 mr-1']"
+            />
+            <span :class="kpi.trend === 'up' ? 'text-green-600' : 'text-red-600'">
+              {{ kpi.change }}
+            </span>
+            <span class="text-muted-foreground ml-1">vs last month</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Main Charts Row -->
+    <div class="grid gap-4 md:grid-cols-7">
+      <!-- Cash Flow Chart -->
+      <Card class="md:col-span-4">
+        <CardHeader>
+          <CardTitle>Cash Flow Analysis</CardTitle>
+          <CardDescription>Monthly cash inflow, outflow, and net cash flow for 2024</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <VueApexCharts
+              type="area"
+              height="350"
+              :options="cashFlowOptions"
+              :series="cashFlowSeries"
+          />
+        </CardContent>
+      </Card>
+
+      <!-- Expense Breakdown -->
+      <Card class="md:col-span-3">
+        <CardHeader>
+          <CardTitle>Expense Breakdown</CardTitle>
+          <CardDescription>Distribution of expenses by category</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <VueApexCharts
+              type="donut"
+              height="320"
+              :options="expenseBreakdownOptions"
+              :series="expenseBreakdownSeries"
+          />
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Revenue vs Expense Chart -->
+    <Card>
+      <CardHeader>
+        <CardTitle>Revenue vs Expenses</CardTitle>
+        <CardDescription>Monthly comparison of revenue and expenses</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <VueApexCharts
+            type="bar"
+            height="320"
+            :options="revenueExpenseOptions"
+            :series="revenueExpenseSeries"
+        />
+      </CardContent>
+    </Card>
+
+    <!-- Accounts Receivable & Payable Row -->
+    <div class="grid gap-4 md:grid-cols-2">
+      <!-- Accounts Receivable -->
+      <Card>
+        <CardHeader>
+          <div class="flex items-center justify-between">
+            <div>
+              <CardTitle>Accounts Receivable</CardTitle>
+              <CardDescription>Outstanding customer invoices</CardDescription>
+            </div>
+            <Badge variant="outline" class="text-lg font-semibold">
+              {{ formatCurrency(456000000) }}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div class="space-y-3">
+            <div
+                v-for="ar in accountsReceivable"
+                :key="ar.invoice"
+                class="flex items-center justify-between p-3 rounded-lg border"
+                :class="ar.status === 'overdue' ? 'border-red-200 bg-red-50/30' : ''"
+            >
+              <div class="space-y-1 flex-1">
+                <div class="flex items-center gap-2">
+                  <Building2 class="w-4 h-4 text-muted-foreground" />
+                  <p class="font-medium">{{ ar.customer }}</p>
+                </div>
+                <p class="text-sm text-muted-foreground">{{ ar.invoice }}</p>
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock class="w-3 h-3" />
+                  <span>Due: {{ ar.dueDate }} ({{ ar.days }} days)</span>
+                </div>
+              </div>
+              <div class="text-right space-y-2">
+                <p class="font-semibold">{{ formatCurrency(ar.amount) }}</p>
+                <Badge :class="getStatusColor(ar.status)" class="capitalize">
+                  {{ ar.status }}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Accounts Payable -->
+      <Card>
+        <CardHeader>
+          <div class="flex items-center justify-between">
+            <div>
+              <CardTitle>Accounts Payable</CardTitle>
+              <CardDescription>Outstanding vendor bills</CardDescription>
+            </div>
+            <Badge variant="outline" class="text-lg font-semibold">
+              {{ formatCurrency(289000000) }}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div class="space-y-3">
+            <div
+                v-for="ap in accountsPayable"
+                :key="ap.invoice"
+                class="flex items-center justify-between p-3 rounded-lg border"
+            >
+              <div class="space-y-1 flex-1">
+                <div class="flex items-center gap-2">
+                  <Users2 class="w-4 h-4 text-muted-foreground" />
+                  <p class="font-medium">{{ ap.vendor }}</p>
+                </div>
+                <p class="text-sm text-muted-foreground">{{ ap.invoice }}</p>
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock class="w-3 h-3" />
+                  <span>Due: {{ ap.dueDate }} ({{ ap.days }} days)</span>
+                </div>
+              </div>
+              <div class="text-right space-y-2">
+                <p class="font-semibold">{{ formatCurrency(ap.amount) }}</p>
+                <Badge :class="getStatusColor(ap.status)" class="capitalize">
+                  {{ ap.status }}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Recent Transactions -->
+    <Card>
+      <CardHeader>
+        <CardTitle>Recent Transactions</CardTitle>
+        <CardDescription>Latest financial transactions</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div class="space-y-3">
+          <div
+              v-for="transaction in recentTransactions"
+              :key="transaction.id"
+              class="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+          >
+            <div class="flex items-center gap-3 flex-1">
+              <div :class="[
+                transaction.type === 'income' ? 'bg-green-50' : 'bg-red-50',
+                'p-2 rounded-lg'
+              ]">
+                <component
+                    :is="getTransactionIcon(transaction.type)"
+                    :class="[getTransactionColor(transaction.type), 'w-4 h-4']"
+                />
+              </div>
+              <div class="flex-1">
+                <p class="font-medium">{{ transaction.description }}</p>
+                <div class="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                  <span>{{ transaction.id }}</span>
+                  <span>•</span>
+                  <span>{{ transaction.date }}</span>
+                  <span>•</span>
+                  <Badge variant="outline" class="text-xs">{{ transaction.category }}</Badge>
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <p :class="[
+                'font-semibold text-lg',
+                getTransactionColor(transaction.type)
+              ]">
+                {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+</template>
+
+<style scoped>
+
+</style>
+
+3. Cash Flow.vue:
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import {
+  TrendingUp,
+  ArrowUpRight,
+  ArrowDownRight,
+  Download,
+  Plus,
+  Search,
+  DollarSign,
+  Wallet,
+  Trash2
+} from 'lucide-vue-next'
+import VueApexCharts from 'vue3-apexcharts'
+import Header from "@/components/kakangCustom/Header.vue"
+import { useAuthStore } from "@/stores/auth.ts"
+import type { DateRange } from "reka-ui"
+import type { Ref } from "vue"
+import {
+  CalendarDate,
+  DateFormatter,
+  getLocalTimeZone,
+} from "@internationalized/date"
+import { CalendarIcon } from "lucide-vue-next"
+import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { RangeCalendar } from "@/components/ui/range-calendar"
+import { toast } from "vue-sonner"
+
+// Date Picker Setup
+const df = new DateFormatter("en-US", {
+  dateStyle: "medium",
+})
+
+const value = ref({
+  start: new CalendarDate(2024, 10, 1),
+  end: new CalendarDate(2024, 10, 31),
+}) as Ref<DateRange>
+
+// Auth Store
+const authStore = useAuthStore()
+
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good Morning'
+  if (hour < 18) return 'Good Afternoon'
+  return 'Good Evening'
+})
+
+const userName = computed(() => {
+  return authStore.userProfile?.displayName || authStore.user?.displayName || 'User'
+})
+
+// Format Currency Helper
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value)
+}
+
+// Cash Flow Summary
+const cashFlowSummary = ref({
+  openingBalance: 1650000000,
+  totalInflow: 2450000000,
+  totalOutflow: 1890000000,
+  netCashFlow: 560000000,
+  closingBalance: 2210000000,
+  forecastedBalance: 2580000000
+})
+
+// Cash Flow Chart
+const cashFlowChartOptions = ref({
+  chart: {
+    id: 'detailed-cash-flow',
+    type: 'line',
+    height: 400,
+    toolbar: { show: true },
+    fontFamily: 'inherit'
+  },
+  dataLabels: { enabled: false },
+  stroke: { curve: 'smooth', width: 3 },
+  xaxis: {
+    categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Forecast W1', 'Forecast W2', 'Forecast W3', 'Forecast W4']
+  },
+  colors: ['#3b82f6', '#10b981', '#ef4444'],
+  legend: { position: 'top', horizontalAlign: 'right' },
+  yaxis: {
+    labels: {
+      formatter: (val: number) => {
+        if (val >= 1000000000) return `Rp ${(val / 1000000000).toFixed(1)}M`
+        if (val >= 1000000) return `Rp ${(val / 1000000).toFixed(0)}jt`
+        return `Rp ${(val / 1000).toFixed(0)}rb`
+      }
+    }
+  },
+  tooltip: {
+    y: {
+      formatter: (val: number) => formatCurrency(val)
+    }
+  },
+  annotations: {
+    xaxis: [{
+      x: 4.5,
+      borderColor: '#999',
+      label: {
+        text: 'Forecast',
+        style: {
+          color: '#fff',
+          background: '#999'
+        }
+      }
+    }]
+  }
+})
+
+const cashFlowChartSeries = ref([
+  {
+    name: 'Cash Balance',
+    data: [1650000000, 1780000000, 1920000000, 2210000000, 2350000000, 2480000000, 2520000000, 2580000000]
+  },
+  {
+    name: 'Cash Inflow',
+    data: [450000000, 520000000, 480000000, 650000000, 580000000, 620000000, 590000000, 610000000]
+  },
+  {
+    name: 'Cash Outflow',
+    data: [320000000, 380000000, 350000000, 360000000, 440000000, 490000000, 450000000, 470000000]
+  }
+])
+
+// Cash Flow Transactions
+const cashFlowTransactions = ref([
+  { id: 'CF-2024-001', date: '2024-10-03', type: 'inflow', category: 'Sales Revenue', description: 'Payment from PT Maju Jaya - Invoice INV-2024-001', amount: 125000000, status: 'confirmed', reference: 'INV-2024-001' },
+  { id: 'CF-2024-002', date: '2024-10-03', type: 'outflow', category: 'Salaries & Benefits', description: 'Monthly Salary Payment - October 2024', amount: 55000000, status: 'confirmed', reference: 'PAY-2024-010' },
+  { id: 'CF-2024-003', date: '2024-10-02', type: 'inflow', category: 'Sales Revenue', description: 'Payment from CV Sukses Mandiri - Invoice INV-2024-002', amount: 85000000, status: 'confirmed', reference: 'INV-2024-002' },
+  { id: 'CF-2024-004', date: '2024-10-02', type: 'outflow', category: 'Operating Expenses', description: 'Office Rent Payment - October 2024', amount: 15000000, status: 'confirmed', reference: 'RENT-2024-10' },
+  { id: 'CF-2024-005', date: '2024-10-01', type: 'outflow', category: 'Operating Expenses', description: 'Marketing Campaign - Digital Advertising', amount: 12000000, status: 'confirmed', reference: 'MKT-2024-015' },
+  { id: 'CF-2024-006', date: '2024-10-05', type: 'inflow', category: 'Sales Revenue', description: 'Expected payment from Toko Berkah', amount: 45000000, status: 'forecasted', reference: 'INV-2024-003' },
+  { id: 'CF-2024-007', date: '2024-10-08', type: 'outflow', category: 'Loan Payments', description: 'Bank Loan Installment - October 2024', amount: 35000000, status: 'scheduled', reference: 'LOAN-2024-10' }
+])
+
+// Dialog states
+const isAddTransactionOpen = ref(false)
+
+// Form data
+const newTransaction = ref({
+  type: 'inflow',
+  category: '',
+  description: '',
+  amount: 0,
+  date: '',
+  reference: '',
+  status: 'scheduled'
+})
+
+// Search and filter
+const searchQuery = ref('')
+const selectedFilter = ref('all')
+
+// Computed filtered transactions
+const filteredTransactions = computed(() => {
+  let filtered = cashFlowTransactions.value
+
+  if (searchQuery.value) {
+    filtered = filtered.filter(t => 
+      t.description.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      t.reference.toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
+  }
+
+  if (selectedFilter.value !== 'all') {
+    filtered = filtered.filter(t => t.type === selectedFilter.value)
+  }
+
+  return filtered
+})
+
+// Functions
+const handleAddTransaction = () => {
+  const transaction = {
+    id: `CF-2024-${String(cashFlowTransactions.value.length + 1).padStart(3, '0')}`,
+    ...newTransaction.value,
+    date: newTransaction.value.date || new Date().toISOString().split('T')[0]
+  }
+  
+  cashFlowTransactions.value.unshift(transaction)
+  
+  // Reset form
+  newTransaction.value = {
+    type: 'inflow',
+    category: '',
+    description: '',
+    amount: 0,
+    date: '',
+    reference: '',
+    status: 'scheduled'
+  }
+  
+  isAddTransactionOpen.value = false
+  toast.success('Cash flow transaction added successfully!')
+}
+
+const handleDeleteTransaction = (id: string) => {
+  cashFlowTransactions.value = cashFlowTransactions.value.filter(t => t.id !== id)
+  toast.success('Transaction deleted successfully!')
+}
+
+const getStatusColor = (status: string) => {
+  const colors: Record<string, string> = {
+    confirmed: 'bg-green-100 text-green-800',
+    scheduled: 'bg-blue-100 text-blue-800',
+    forecasted: 'bg-yellow-100 text-yellow-800',
+    cancelled: 'bg-red-100 text-red-800'
+  }
+  return colors[status] || 'bg-gray-100 text-gray-800'
+}
+
+const getTransactionColor = (type: string) => {
+  return type === 'inflow' ? 'text-green-600' : 'text-red-600'
+}
+
+const getTransactionIcon = (type: string) => {
+  return type === 'inflow' ? ArrowDownRight : ArrowUpRight
+}
+
+const exportCashFlow = () => {
+  const start = value.value?.start
+  const end = value.value?.end ?? start
+
+  if (!start) {
+    toast.error('Please select a date range first.')
+    return
+  }
+
+  const toastId = toast.loading('Preparing cash flow report...')
+
+  setTimeout(() => {
+    toast.success('Cash flow report exported successfully!', {
+      id: toastId,
+      duration: 3000
+    })
+  }, 1500)
+}
+</script>
+
+<template>
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <Header
+          title="Cash Flow Management"
+          :subtitle="`${greeting}, ${userName}!`"
+          align="left"
+      />
+
+      <div class="flex items-center gap-2">
+        <Popover>
+          <PopoverTrigger as-child>
+            <Button
+                variant="outline"
+                :class="cn(
+                  'w-[280px] justify-start text-left font-normal',
+                  !value && 'text-muted-foreground',
+                )"
+            >
+              <CalendarIcon class="mr-2 h-4 w-4" />
+              <template v-if="value.start">
+                <template v-if="value.end">
+                  {{ df.format(value.start.toDate(getLocalTimeZone())) }} - {{ df.format(value.end.toDate(getLocalTimeZone())) }}
+                </template>
+                <template v-else>
+                  {{ df.format(value.start.toDate(getLocalTimeZone())) }}
+                </template>
+              </template>
+              <template v-else>
+                Pick a date range
+              </template>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent class="w-auto p-0">
+            <RangeCalendar
+                v-model="value"
+                initial-focus
+                :number-of-months="2"
+                @update:start-value="(startDate) => value.start = startDate"
+            />
+          </PopoverContent>
+        </Popover>
+
+        <Button @click="exportCashFlow">
+          <Download class="mr-2 h-4 w-4" />
+          Export
+        </Button>
+
+        <Dialog v-model:open="isAddTransactionOpen">
+          <DialogTrigger as-child>
+            <Button>
+              <Plus class="mr-2 h-4 w-4" />
+              Add Transaction
+            </Button>
+          </DialogTrigger>
+          <DialogContent class="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add Cash Flow Transaction</DialogTitle>
+              <DialogDescription>
+                Add a new cash flow transaction to track inflows and outflows.
+              </DialogDescription>
+            </DialogHeader>
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                  <Label>Type</Label>
+                  <Select v-model="newTransaction.type">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inflow">Cash Inflow</SelectItem>
+                      <SelectItem value="outflow">Cash Outflow</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div class="space-y-2">
+                  <Label>Status</Label>
+                  <Select v-model="newTransaction.status">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                      <SelectItem value="scheduled">Scheduled</SelectItem>
+                      <SelectItem value="forecasted">Forecasted</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <Label>Category</Label>
+                <Input v-model="newTransaction.category" placeholder="e.g., Sales Revenue, Operating Expenses" />
+              </div>
+              <div class="space-y-2">
+                <Label>Description</Label>
+                <Textarea v-model="newTransaction.description" placeholder="Transaction description" />
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                  <Label>Amount (IDR)</Label>
+                  <Input v-model.number="newTransaction.amount" type="number" placeholder="0" />
+                </div>
+                <div class="space-y-2">
+                  <Label>Date</Label>
+                  <Input v-model="newTransaction.date" type="date" />
+                </div>
+              </div>
+              <div class="space-y-2">
+                <Label>Reference</Label>
+                <Input v-model="newTransaction.reference" placeholder="Invoice/Reference number" />
+              </div>
+              <div class="flex justify-end gap-2">
+                <Button variant="outline" @click="isAddTransactionOpen = false">Cancel</Button>
+                <Button @click="handleAddTransaction">Add Transaction</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+
+    <!-- Cash Flow Summary Cards -->
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+      <Card>
+        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle class="text-sm font-medium">Opening Balance</CardTitle>
+          <Wallet class="h-4 w-4 text-blue-600" />
+        </CardHeader>
+        <CardContent>
+          <div class="text-2xl font-bold">{{ formatCurrency(cashFlowSummary.openingBalance) }}</div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle class="text-sm font-medium">Total Inflow</CardTitle>
+          <ArrowDownRight class="h-4 w-4 text-green-600" />
+        </CardHeader>
+        <CardContent>
+          <div class="text-2xl font-bold text-green-600">{{ formatCurrency(cashFlowSummary.totalInflow) }}</div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle class="text-sm font-medium">Total Outflow</CardTitle>
+          <ArrowUpRight class="h-4 w-4 text-red-600" />
+        </CardHeader>
+        <CardContent>
+          <div class="text-2xl font-bold text-red-600">{{ formatCurrency(cashFlowSummary.totalOutflow) }}</div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle class="text-sm font-medium">Net Cash Flow</CardTitle>
+          <TrendingUp class="h-4 w-4 text-purple-600" />
+        </CardHeader>
+        <CardContent>
+          <div class="text-2xl font-bold text-purple-600">{{ formatCurrency(cashFlowSummary.netCashFlow) }}</div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle class="text-sm font-medium">Closing Balance</CardTitle>
+          <DollarSign class="h-4 w-4 text-blue-600" />
+        </CardHeader>
+        <CardContent>
+          <div class="text-2xl font-bold">{{ formatCurrency(cashFlowSummary.closingBalance) }}</div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle class="text-sm font-medium">Forecasted Balance</CardTitle>
+          <TrendingUp class="h-4 w-4 text-orange-600" />
+        </CardHeader>
+        <CardContent>
+          <div class="text-2xl font-bold text-orange-600">{{ formatCurrency(cashFlowSummary.forecastedBalance) }}</div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Cash Flow Chart -->
+    <Card>
+      <CardHeader>
+        <CardTitle>Cash Flow Trend & Forecast</CardTitle>
+        <CardDescription>Weekly cash flow analysis with 4-week forecast</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <VueApexCharts
+            type="line"
+            height="400"
+            :options="cashFlowChartOptions"
+            :series="cashFlowChartSeries"
+        />
+      </CardContent>
+    </Card>
+
+    <!-- Cash Flow Transactions -->
+    <Card>
+      <CardHeader>
+        <div class="flex items-center justify-between">
+          <div>
+            <CardTitle>Cash Flow Transactions</CardTitle>
+            <CardDescription>Detailed list of all cash flow transactions</CardDescription>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="relative">
+              <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                  v-model="searchQuery"
+                  placeholder="Search transactions..."
+                  class="pl-8 w-64"
+              />
+            </div>
+            <Select v-model="selectedFilter">
+              <SelectTrigger class="w-32">
+                <SelectValue placeholder="Filter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="inflow">Inflow</SelectItem>
+                <SelectItem value="outflow">Outflow</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div class="space-y-3">
+          <div
+              v-for="transaction in filteredTransactions"
+              :key="transaction.id"
+              class="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+          >
+            <div class="flex items-center gap-4 flex-1">
+              <div :class="[
+                transaction.type === 'inflow' ? 'bg-green-50' : 'bg-red-50',
+                'p-2 rounded-lg'
+              ]">
+                <component
+                    :is="getTransactionIcon(transaction.type)"
+                    :class="[getTransactionColor(transaction.type), 'w-5 h-5']"
+                />
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <p class="font-medium">{{ transaction.description }}</p>
+                  <Badge :class="getStatusColor(transaction.status)" class="text-xs">
+                    {{ transaction.status }}
+                  </Badge>
+                </div>
+                <div class="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span>{{ transaction.id }}</span>
+                  <span>•</span>
+                  <span>{{ transaction.date }}</span>
+                  <span>•</span>
+                  <Badge variant="outline" class="text-xs">{{ transaction.category }}</Badge>
+                  <span v-if="transaction.reference">•</span>
+                  <span v-if="transaction.reference" class="text-xs">{{ transaction.reference }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="text-right">
+                <p :class="[
+                  'font-semibold text-lg',
+                  getTransactionColor(transaction.type)
+                ]">
+                  {{ transaction.type === 'inflow' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+                </p>
+              </div>
+              <div class="flex items-center gap-1">
+                <Button variant="ghost" size="sm" @click="handleDeleteTransaction(transaction.id)">
+                  <Trash2 class="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+</template>
+
+<style scoped>
+
+</style>
+
+
+4. General LEdge.vue:
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Plus,
+  Search,
+  Filter,
+  Download,
+  BookOpen,
+  Calculator,
+  FileText,
+  Edit,
+  Trash2,
+  Eye
+} from 'lucide-vue-next'
+import Header from "@/components/kakangCustom/Header.vue"
+import { useAuthStore } from "@/stores/auth.ts"
+import type { DateRange } from "reka-ui"
+import type { Ref } from "vue"
+import {
+  CalendarDate,
+  DateFormatter,
+  getLocalTimeZone,
+} from "@internationalized/date"
+import { CalendarIcon } from "lucide-vue-next"
+import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { RangeCalendar } from "@/components/ui/range-calendar"
+import { toast } from "vue-sonner"
+
+// Date Picker Setup
+const df = new DateFormatter("en-US", {
+  dateStyle: "medium",
+})
+
+const value = ref({
+  start: new CalendarDate(2024, 10, 1),
+  end: new CalendarDate(2024, 10, 31),
+}) as Ref<DateRange>
+
+// Auth Store
+const authStore = useAuthStore()
+
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good Morning'
+  if (hour < 18) return 'Good Afternoon'
+  return 'Good Evening'
+})
+
+const userName = computed(() => {
+  return authStore.userProfile?.displayName || authStore.user?.displayName || 'User'
+})
+
+// Format Currency Helper
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value)
+}
+
+// Chart of Accounts
+const chartOfAccounts = ref([
+  { code: '1000', name: 'Cash and Cash Equivalents', type: 'Asset', balance: 1850000000, status: 'active' },
+  { code: '1100', name: 'Accounts Receivable', type: 'Asset', balance: 456000000, status: 'active' },
+  { code: '1200', name: 'Inventory', type: 'Asset', balance: 680000000, status: 'active' },
+  { code: '1300', name: 'Prepaid Expenses', type: 'Asset', balance: 125000000, status: 'active' },
+  { code: '1500', name: 'Property, Plant & Equipment', type: 'Asset', balance: 2850000000, status: 'active' },
+  { code: '2000', name: 'Accounts Payable', type: 'Liability', balance: 289000000, status: 'active' },
+  { code: '2100', name: 'Short-term Debt', type: 'Liability', balance: 180000000, status: 'active' },
+  { code: '2200', name: 'Accrued Expenses', type: 'Liability', balance: 145000000, status: 'active' },
+  { code: '2500', name: 'Long-term Debt', type: 'Liability', balance: 1250000000, status: 'active' },
+  { code: '3000', name: 'Share Capital', type: 'Equity', balance: 2500000000, status: 'active' },
+  { code: '3100', name: 'Retained Earnings', type: 'Equity', balance: 982000000, status: 'active' },
+  { code: '4000', name: 'Sales Revenue', type: 'Revenue', balance: 2450000000, status: 'active' },
+  { code: '4100', name: 'Service Revenue', type: 'Revenue', balance: 320000000, status: 'active' },
+  { code: '5000', name: 'Cost of Goods Sold', type: 'Expense', balance: 1470000000, status: 'active' },
+  { code: '6000', name: 'Operating Expenses', type: 'Expense', balance: 650000000, status: 'active' },
+  { code: '6100', name: 'Salaries and Benefits', type: 'Expense', balance: 520000000, status: 'active' }
+])
+
+// Journal Entries
+const journalEntries = ref([
+  {
+    id: 'JE-2024-001',
+    date: '2024-10-03',
+    reference: 'INV-2024-001',
+    description: 'Payment received from PT Maju Jaya',
+    entries: [
+      { account: '1000', accountName: 'Cash and Cash Equivalents', debit: 125000000, credit: 0 },
+      { account: '1100', accountName: 'Accounts Receivable', debit: 0, credit: 125000000 }
+    ],
+    totalDebit: 125000000,
+    totalCredit: 125000000,
+    status: 'posted'
+  },
+  {
+    id: 'JE-2024-002',
+    date: '2024-10-03',
+    reference: 'PAY-2024-010',
+    description: 'Monthly salary payment',
+    entries: [
+      { account: '6100', accountName: 'Salaries and Benefits', debit: 55000000, credit: 0 },
+      { account: '1000', accountName: 'Cash and Cash Equivalents', debit: 0, credit: 55000000 }
+    ],
+    totalDebit: 55000000,
+    totalCredit: 55000000,
+    status: 'posted'
+  },
+  {
+    id: 'JE-2024-003',
+    date: '2024-10-02',
+    reference: 'RENT-2024-10',
+    description: 'Office rent payment',
+    entries: [
+      { account: '6000', accountName: 'Operating Expenses', debit: 15000000, credit: 0 },
+      { account: '1000', accountName: 'Cash and Cash Equivalents', debit: 0, credit: 15000000 }
+    ],
+    totalDebit: 15000000,
+    totalCredit: 15000000,
+    status: 'posted'
+  },
+  {
+    id: 'JE-2024-004',
+    date: '2024-10-05',
+    reference: 'DRAFT-001',
+    description: 'Equipment purchase - pending approval',
+    entries: [
+      { account: '1500', accountName: 'Property, Plant & Equipment', debit: 85000000, credit: 0 },
+      { account: '1000', accountName: 'Cash and Cash Equivalents', debit: 0, credit: 85000000 }
+    ],
+    totalDebit: 85000000,
+    totalCredit: 85000000,
+    status: 'draft'
+  }
+])
+
+// Dialog states
+const isAddJournalOpen = ref(false)
+const isAddAccountOpen = ref(false)
+const selectedJournal = ref(null)
+
+// Form data
+const newJournalEntry = ref({
+  date: '',
+  reference: '',
+  description: '',
+  entries: [
+    { account: '', accountName: '', debit: 0, credit: 0 },
+    { account: '', accountName: '', debit: 0, credit: 0 }
+  ]
+})
+
+const newAccount = ref({
+  code: '',
+  name: '',
+  type: 'Asset',
+  status: 'active'
+})
+
+// Search and filter
+const searchQuery = ref('')
+const selectedAccountType = ref('all')
+const selectedStatus = ref('all')
+
+// Computed filtered accounts
+const filteredAccounts = computed(() => {
+  let filtered = chartOfAccounts.value
+
+  if (searchQuery.value) {
+    filtered = filtered.filter(account => 
+      account.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      account.code.includes(searchQuery.value)
+    )
+  }
+
+  if (selectedAccountType.value !== 'all') {
+    filtered = filtered.filter(account => account.type === selectedAccountType.value)
+  }
+
+  if (selectedStatus.value !== 'all') {
+    filtered = filtered.filter(account => account.status === selectedStatus.value)
+  }
+
+  return filtered
+})
+
+// Computed totals
+const accountTypeTotals = computed(() => {
+  const totals = {
+    Asset: 0,
+    Liability: 0,
+    Equity: 0,
+    Revenue: 0,
+    Expense: 0
+  }
+
+  chartOfAccounts.value.forEach(account => {
+    totals[account.type as keyof typeof totals] += account.balance
+  })
+
+  return totals
+})
+
+// Functions
+const addJournalEntry = () => {
+  const totalDebit = newJournalEntry.value.entries.reduce((sum, entry) => sum + entry.debit, 0)
+  const totalCredit = newJournalEntry.value.entries.reduce((sum, entry) => sum + entry.credit, 0)
+
+  if (totalDebit !== totalCredit) {
+    toast.error('Total debits must equal total credits')
+    return
+  }
+
+  const entry = {
+    id: `JE-2024-${String(journalEntries.value.length + 1).padStart(3, '0')}`,
+    ...newJournalEntry.value,
+    totalDebit,
+    totalCredit,
+    status: 'draft',
+    date: newJournalEntry.value.date || new Date().toISOString().split('T')[0]
+  }
+
+  journalEntries.value.unshift(entry)
+  
+  // Reset form
+  newJournalEntry.value = {
+    date: '',
+    reference: '',
+    description: '',
+    entries: [
+      { account: '', accountName: '', debit: 0, credit: 0 },
+      { account: '', accountName: '', debit: 0, credit: 0 }
+    ]
+  }
+  
+  isAddJournalOpen.value = false
+  toast.success('Journal entry added successfully!')
+}
+
+const addAccount = () => {
+  const account = {
+    ...newAccount.value,
+    balance: 0
+  }
+  
+  chartOfAccounts.value.push(account)
+  
+  // Reset form
+  newAccount.value = {
+    code: '',
+    name: '',
+    type: 'Asset',
+    status: 'active'
+  }
+  
+  isAddAccountOpen.value = false
+  toast.success('Account added successfully!')
+}
+
+const addJournalEntryLine = () => {
+  newJournalEntry.value.entries.push({ account: '', accountName: '', debit: 0, credit: 0 })
+}
+
+const removeJournalEntryLine = (index: number) => {
+  if (newJournalEntry.value.entries.length > 2) {
+    newJournalEntry.value.entries.splice(index, 1)
+  }
+}
+
+const getAccountTypeColor = (type: string) => {
+  const colors: Record<string, string> = {
+    Asset: 'bg-blue-100 text-blue-800',
+    Liability: 'bg-red-100 text-red-800',
+    Equity: 'bg-purple-100 text-purple-800',
+    Revenue: 'bg-green-100 text-green-800',
+    Expense: 'bg-orange-100 text-orange-800'
+  }
+  return colors[type] || 'bg-gray-100 text-gray-800'
+}
+
+const getStatusColor = (status: string) => {
+  const colors: Record<string, string> = {
+    active: 'bg-green-100 text-green-800',
+    inactive: 'bg-gray-100 text-gray-800',
+    posted: 'bg-blue-100 text-blue-800',
+    draft: 'bg-yellow-100 text-yellow-800'
+  }
+  return colors[status] || 'bg-gray-100 text-gray-800'
+}
+
+const exportLedger = () => {
+  const toastId = toast.loading('Exporting general ledger...')
+
+  setTimeout(() => {
+    toast.success('General ledger exported successfully!', {
+      id: toastId,
+      duration: 3000
+    })
+  }, 1500)
+}
+</script>
+
+<template>
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <Header
+          title="General Ledger"
+          :subtitle="`${greeting}, ${userName}!`"
+          align="left"
+      />
+
+      <div class="flex items-center gap-2">
+        <Popover>
+          <PopoverTrigger as-child>
+            <Button
+                variant="outline"
+                :class="cn(
+                  'w-[280px] justify-start text-left font-normal',
+                  !value && 'text-muted-foreground',
+                )"
+            >
+              <CalendarIcon class="mr-2 h-4 w-4" />
+              <template v-if="value.start">
+                <template v-if="value.end">
+                  {{ df.format(value.start.toDate(getLocalTimeZone())) }} - {{ df.format(value.end.toDate(getLocalTimeZone())) }}
+                </template>
+                <template v-else>
+                  {{ df.format(value.start.toDate(getLocalTimeZone())) }}
+                </template>
+              </template>
+              <template v-else>
+                Select period
+              </template>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent class="w-auto p-0">
+            <RangeCalendar
+                v-model="value"
+                initial-focus
+                :number-of-months="2"
+                @update:start-value="(startDate) => value.start = startDate"
+            />
+          </PopoverContent>
+        </Popover>
+
+        <Button @click="exportLedger">
+          <Download class="mr-2 h-4 w-4" />
+          Export
+        </Button>
+
+        <Dialog v-model:open="isAddAccountOpen">
+          <DialogTrigger as-child>
+            <Button variant="outline">
+              <Plus class="mr-2 h-4 w-4" />
+              Add Account
+            </Button>
+          </DialogTrigger>
+          <DialogContent class="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add New Account</DialogTitle>
+              <DialogDescription>
+                Add a new account to the chart of accounts.
+              </DialogDescription>
+            </DialogHeader>
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                  <Label>Account Code</Label>
+                  <Input v-model="newAccount.code" placeholder="e.g., 1000" />
+                </div>
+                <div class="space-y-2">
+                  <Label>Account Type</Label>
+                  <Select v-model="newAccount.type">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Asset">Asset</SelectItem>
+                      <SelectItem value="Liability">Liability</SelectItem>
+                      <SelectItem value="Equity">Equity</SelectItem>
+                      <SelectItem value="Revenue">Revenue</SelectItem>
+                      <SelectItem value="Expense">Expense</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <Label>Account Name</Label>
+                <Input v-model="newAccount.name" placeholder="Account name" />
+              </div>
+              <div class="flex justify-end gap-2">
+                <Button variant="outline" @click="isAddAccountOpen = false">Cancel</Button>
+                <Button @click="addAccount">Add Account</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog v-model:open="isAddJournalOpen">
+          <DialogTrigger as-child>
+            <Button>
+              <Plus class="mr-2 h-4 w-4" />
+              Add Journal Entry
+            </Button>
+          </DialogTrigger>
+          <DialogContent class="sm:max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Add Journal Entry</DialogTitle>
+              <DialogDescription>
+                Create a new journal entry with debits and credits.
+              </DialogDescription>
+            </DialogHeader>
+            <div class="space-y-4">
+              <div class="grid grid-cols-3 gap-4">
+                <div class="space-y-2">
+                  <Label>Date</Label>
+                  <Input v-model="newJournalEntry.date" type="date" />
+                </div>
+                <div class="space-y-2">
+                  <Label>Reference</Label>
+                  <Input v-model="newJournalEntry.reference" placeholder="Reference number" />
+                </div>
+                <div class="space-y-2">
+                  <Label>Description</Label>
+                  <Input v-model="newJournalEntry.description" placeholder="Entry description" />
+                </div>
+              </div>
+              
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <Label>Journal Entry Lines</Label>
+                  <Button variant="outline" size="sm" @click="addJournalEntryLine">
+                    <Plus class="mr-1 h-3 w-3" />
+                    Add Line
+                  </Button>
+                </div>
+                
+                <div class="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Account</TableHead>
+                        <TableHead>Debit</TableHead>
+                        <TableHead>Credit</TableHead>
+                        <TableHead class="w-12"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow v-for="(entry, index) in newJournalEntry.entries" :key="index">
+                        <TableCell>
+                          <Select v-model="entry.account">
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select account" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem 
+                                v-for="account in chartOfAccounts" 
+                                :key="account.code" 
+                                :value="account.code"
+                                @click="entry.accountName = account.name"
+                              >
+                                {{ account.code }} - {{ account.name }}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Input v-model.number="entry.debit" type="number" placeholder="0" />
+                        </TableCell>
+                        <TableCell>
+                          <Input v-model.number="entry.credit" type="number" placeholder="0" />
+                        </TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            @click="removeJournalEntryLine(index)"
+                            :disabled="newJournalEntry.entries.length <= 2"
+                          >
+                            <Trash2 class="h-3 w-3" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+              
+              <div class="flex justify-end gap-2">
+                <Button variant="outline" @click="isAddJournalOpen = false">Cancel</Button>
+                <Button @click="addJournalEntry">Add Entry</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+
+    <!-- Account Type Summary -->
+    <div class="grid gap-4 md:grid-cols-5">
+      <Card v-for="(total, type) in accountTypeTotals" :key="type">
+        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle class="text-sm font-medium">{{ type }}</CardTitle>
+          <BookOpen class="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div class="text-2xl font-bold">{{ formatCurrency(total) }}</div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Chart of Accounts -->
+    <Card>
+      <CardHeader>
+        <div class="flex items-center justify-between">
+          <div>
+            <CardTitle>Chart of Accounts</CardTitle>
+            <CardDescription>Complete list of all accounts in the general ledger</CardDescription>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="relative">
+              <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                  v-model="searchQuery"
+                  placeholder="Search accounts..."
+                  class="pl-8 w-64"
+              />
+            </div>
+            <Select v-model="selectedAccountType">
+              <SelectTrigger class="w-32">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="Asset">Asset</SelectItem>
+                <SelectItem value="Liability">Liability</SelectItem>
+                <SelectItem value="Equity">Equity</SelectItem>
+                <SelectItem value="Revenue">Revenue</SelectItem>
+                <SelectItem value="Expense">Expense</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Account Code</TableHead>
+              <TableHead>Account Name</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Balance</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead class="w-12"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow v-for="account in filteredAccounts" :key="account.code">
+              <TableCell class="font-mono">{{ account.code }}</TableCell>
+              <TableCell class="font-medium">{{ account.name }}</TableCell>
+              <TableCell>
+                <Badge :class="getAccountTypeColor(account.type)">
+                  {{ account.type }}
+                </Badge>
+              </TableCell>
+              <TableCell class="font-semibold">{{ formatCurrency(account.balance) }}</TableCell>
+              <TableCell>
+                <Badge :class="getStatusColor(account.status)">
+                  {{ account.status }}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Button variant="ghost" size="sm">
+                  <Eye class="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+
+    <!-- Journal Entries -->
+    <Card>
+      <CardHeader>
+        <CardTitle>Recent Journal Entries</CardTitle>
+        <CardDescription>Latest journal entries and transactions</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div class="space-y-4">
+          <div
+              v-for="entry in journalEntries"
+              :key="entry.id"
+              class="border rounded-lg p-4"
+          >
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-50 rounded-lg">
+                  <FileText class="h-4 w-4 text-blue-600" />
+                </div>
+                <div>
+                  <p class="font-medium">{{ entry.description }}</p>
+                  <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{{ entry.id }}</span>
+                    <span>•</span>
+                    <span>{{ entry.date }}</span>
+                    <span v-if="entry.reference">•</span>
+                    <span v-if="entry.reference">{{ entry.reference }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <Badge :class="getStatusColor(entry.status)">
+                  {{ entry.status }}
+                </Badge>
+                <Button variant="ghost" size="sm">
+                  <Edit class="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Account</TableHead>
+                  <TableHead class="text-right">Debit</TableHead>
+                  <TableHead class="text-right">Credit</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow v-for="line in entry.entries" :key="line.account">
+                  <TableCell>
+                    <div>
+                      <span class="font-mono text-sm">{{ line.account }}</span>
+                      <span class="ml-2">{{ line.accountName }}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell class="text-right">
+                    {{ line.debit > 0 ? formatCurrency(line.debit) : '-' }}
+                  </TableCell>
+                  <TableCell class="text-right">
+                    {{ line.credit > 0 ? formatCurrency(line.credit) : '-' }}
+                  </TableCell>
+                </TableRow>
+                <TableRow class="border-t-2">
+                  <TableCell class="font-semibold">Total</TableCell>
+                  <TableCell class="text-right font-semibold">{{ formatCurrency(entry.totalDebit) }}</TableCell>
+                  <TableCell class="text-right font-semibold">{{ formatCurrency(entry.totalCredit) }}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+</template>
+
+<style scoped>
+
+</style>
+
+
