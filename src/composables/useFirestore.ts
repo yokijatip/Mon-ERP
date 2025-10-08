@@ -35,6 +35,7 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
     // Get organization-scoped collection reference
     const getCollectionRef = () => {
         const orgId = authStore.activeOrganizationId
+        console.log(`📦 [useFirestore/${collectionName}] Getting collection ref for org:`, orgId)
         if (!orgId) {
             throw new Error('No active organization selected')
         }
@@ -44,6 +45,7 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
     // Get document reference
     const getDocRef = (docId: string) => {
         const orgId = authStore.activeOrganizationId
+        console.log(`📦 [useFirestore/${collectionName}] Getting document ref for:`, { orgId, docId })
         if (!orgId) {
             throw new Error('No active organization selected')
         }
@@ -61,6 +63,7 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
             const userId = authStore.userId
             if (!userId) throw new Error('User not authenticated')
 
+            console.log(`🔄 [useFirestore/${collectionName}] CREATE - Starting...`, data)
             const collectionRef = getCollectionRef()
 
             const docData = {
@@ -72,11 +75,13 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
             }
 
             const docRef = await addDoc(collectionRef, docData)
+            console.log(`✅ [useFirestore/${collectionName}] CREATE - Success! Doc ID:`, docRef.id)
 
             toast.success('Data created successfully')
             return docRef.id
         } catch (err: any) {
             error.value = err.message
+            console.error(`❌ [useFirestore/${collectionName}] CREATE - Failed:`, err)
             toast.error(`Failed to create: ${err.message}`)
             throw err
         } finally {
@@ -95,6 +100,7 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
             const userId = authStore.userId
             if (!userId) throw new Error('User not authenticated')
 
+            console.log(`🔄 [useFirestore/${collectionName}] CREATE WITH ID - Starting...`, { docId, data })
             const docRef = getDocRef(docId)
 
             const docData = {
@@ -107,10 +113,12 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
             }
 
             await setDoc(docRef, docData)
+            console.log(`✅ [useFirestore/${collectionName}] CREATE WITH ID - Success!`, docId)
 
             toast.success('Data created successfully')
         } catch (err: any) {
             error.value = err.message
+            console.error(`❌ [useFirestore/${collectionName}] CREATE WITH ID - Failed:`, err)
             toast.error(`Failed to create: ${err.message}`)
             throw err
         } finally {
@@ -126,16 +134,21 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
         error.value = null
 
         try {
+            console.log(`🔄 [useFirestore/${collectionName}] GET BY ID - Starting...`, docId)
             const docRef = getDocRef(docId)
             const docSnap = await getDoc(docRef)
 
             if (docSnap.exists()) {
-                return { id: docSnap.id, ...docSnap.data() } as unknown as T
+                const result = { id: docSnap.id, ...docSnap.data() } as unknown as T
+                console.log(`✅ [useFirestore/${collectionName}] GET BY ID - Found:`, result)
+                return result
             }
 
+            console.log(`⚠️ [useFirestore/${collectionName}] GET BY ID - Not found:`, docId)
             return null
         } catch (err: any) {
             error.value = err.message
+            console.error(`❌ [useFirestore/${collectionName}] GET BY ID - Failed:`, err)
             toast.error(`Failed to fetch: ${err.message}`)
             throw err
         } finally {
@@ -151,6 +164,7 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
         error.value = null
 
         try {
+            console.log(`🔄 [useFirestore/${collectionName}] GET ALL - Starting with constraints:`, constraints.length)
             const collectionRef = getCollectionRef()
             const q = query(collectionRef, ...constraints)
             const querySnapshot = await getDocs(q)
@@ -160,9 +174,11 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
                 documents.push({ id: doc.id, ...doc.data() } as unknown as T)
             })
 
+            console.log(`✅ [useFirestore/${collectionName}] GET ALL - Success! Found ${documents.length} documents`, documents)
             return documents
         } catch (err: any) {
             error.value = err.message
+            console.error(`❌ [useFirestore/${collectionName}] GET ALL - Failed:`, err)
             toast.error(`Failed to fetch: ${err.message}`)
             throw err
         } finally {
@@ -178,6 +194,7 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
         operator: WhereFilterOp,
         value: any
     ): Promise<T[]> => {
+        console.log(`🔄 [useFirestore/${collectionName}] GET WHERE - Filter:`, { field, operator, value })
         return getAll([where(field, operator, value)])
     }
 
@@ -192,6 +209,8 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
             limitCount?: number
         }
     ): Promise<T[]> => {
+        console.log(`🔄 [useFirestore/${collectionName}] GET WITH FILTERS - Filters:`, filters, 'Options:', options)
+        
         const constraints: QueryConstraint[] = filters.map(f =>
             where(f.field, f.operator, f.value)
         )
@@ -219,6 +238,7 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
         error.value = null
 
         try {
+            console.log(`🔄 [useFirestore/${collectionName}] GET PAGINATED - PageSize:`, pageSize, 'Constraints:', constraints.length)
             const collectionRef = getCollectionRef()
             const queryConstraints = [...constraints, limit(pageSize)]
 
@@ -236,12 +256,14 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
 
             const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1]
 
+            console.log(`✅ [useFirestore/${collectionName}] GET PAGINATED - Success! Found ${documents.length} documents`)
             return {
                 data: documents,
                 lastDoc: lastVisible
             }
         } catch (err: any) {
             error.value = err.message
+            console.error(`❌ [useFirestore/${collectionName}] GET PAGINATED - Failed:`, err)
             toast.error(`Failed to fetch: ${err.message}`)
             throw err
         } finally {
@@ -260,6 +282,7 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
             const userId = authStore.userId
             if (!userId) throw new Error('User not authenticated')
 
+            console.log(`🔄 [useFirestore/${collectionName}] UPDATE - Starting...`, { docId, data })
             const docRef = getDocRef(docId)
 
             const updateData = {
@@ -269,10 +292,12 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
             }
 
             await updateDoc(docRef, updateData)
+            console.log(`✅ [useFirestore/${collectionName}] UPDATE - Success!`, docId)
 
             toast.success('Data updated successfully')
         } catch (err: any) {
             error.value = err.message
+            console.error(`❌ [useFirestore/${collectionName}] UPDATE - Failed:`, err)
             toast.error(`Failed to update: ${err.message}`)
             throw err
         } finally {
@@ -288,12 +313,15 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
         error.value = null
 
         try {
+            console.log(`🔄 [useFirestore/${collectionName}] DELETE - Starting...`, docId)
             const docRef = getDocRef(docId)
             await deleteDoc(docRef)
+            console.log(`✅ [useFirestore/${collectionName}] DELETE - Success!`, docId)
 
             toast.success('Data deleted successfully')
         } catch (err: any) {
             error.value = err.message
+            console.error(`❌ [useFirestore/${collectionName}] DELETE - Failed:`, err)
             toast.error(`Failed to delete: ${err.message}`)
             throw err
         } finally {
@@ -305,6 +333,7 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
      * SOFT DELETE - Mark as inactive instead of deleting
      */
     const softDelete = async (docId: string): Promise<void> => {
+        console.log(`🔄 [useFirestore/${collectionName}] SOFT DELETE - Starting...`, docId)
         return update(docId, { isActive: false } as Partial<unknown>)
     }
 
@@ -316,6 +345,7 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
         error.value = null
 
         try {
+            console.log(`🔄 [useFirestore/${collectionName}] BULK CREATE - Starting... ${items.length} items`)
             const ids: string[] = []
 
             for (const item of items) {
@@ -323,10 +353,12 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
                 ids.push(id)
             }
 
+            console.log(`✅ [useFirestore/${collectionName}] BULK CREATE - Success! Created ${ids.length} items`)
             toast.success(`${items.length} items created successfully`)
             return ids
         } catch (err: any) {
             error.value = err.message
+            console.error(`❌ [useFirestore/${collectionName}] BULK CREATE - Failed:`, err)
             toast.error(`Bulk create failed: ${err.message}`)
             throw err
         } finally {
@@ -344,13 +376,16 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
         error.value = null
 
         try {
+            console.log(`🔄 [useFirestore/${collectionName}] BULK UPDATE - Starting... ${updates.length} items`)
             for (const { id, data } of updates) {
                 await update(id, data)
             }
 
+            console.log(`✅ [useFirestore/${collectionName}] BULK UPDATE - Success! Updated ${updates.length} items`)
             toast.success(`${updates.length} items updated successfully`)
         } catch (err: any) {
             error.value = err.message
+            console.error(`❌ [useFirestore/${collectionName}] BULK UPDATE - Failed:`, err)
             toast.error(`Bulk update failed: ${err.message}`)
             throw err
         } finally {
@@ -363,10 +398,13 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
      */
     const count = async (constraints: QueryConstraint[] = []): Promise<number> => {
         try {
+            console.log(`🔄 [useFirestore/${collectionName}] COUNT - Starting...`)
             const docs = await getAll(constraints)
+            console.log(`✅ [useFirestore/${collectionName}] COUNT - Result:`, docs.length)
             return docs.length
         } catch (err: any) {
             error.value = err.message
+            console.error(`❌ [useFirestore/${collectionName}] COUNT - Failed:`, err)
             throw err
         }
     }
@@ -376,11 +414,15 @@ export const useFirestore = <T extends DocumentData>(collectionName: string) => 
      */
     const exists = async (docId: string): Promise<boolean> => {
         try {
+            console.log(`🔄 [useFirestore/${collectionName}] EXISTS - Checking...`, docId)
             const docRef = getDocRef(docId)
             const docSnap = await getDoc(docRef)
-            return docSnap.exists()
+            const result = docSnap.exists()
+            console.log(`✅ [useFirestore/${collectionName}] EXISTS - Result:`, result)
+            return result
         } catch (err: any) {
             error.value = err.message
+            console.error(`❌ [useFirestore/${collectionName}] EXISTS - Failed:`, err)
             return false
         }
     }
