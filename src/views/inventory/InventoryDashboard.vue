@@ -201,23 +201,44 @@ const topProducts = computed(() => {
 })
 
 onMounted(async () => {
+  console.log('🚀 [InventoryDashboard] Component mounted, starting data load...')
   await refreshData()
 })
 
 const refreshData = async () => {
   loading.value = true
+  console.log('🔄 [InventoryDashboard] Refresh data started...')
+  
   try {
-    await Promise.all([
+    console.log('📊 [InventoryDashboard] Loading stocks, movements, and products...')
+    
+    const [stocksResult, movementsResult, productsResult] = await Promise.all([
       loadStocks(),
       loadMovements(),
       loadProducts()
     ])
     
+    console.log('✅ [InventoryDashboard] Data loaded:', {
+      stocks: stocksResult?.length || 0,
+      movements: movementsResult?.length || 0,
+      products: productsResult?.length || 0
+    })
+    
+    console.log('🔄 [InventoryDashboard] Loading recent movements...')
     recentMovements.value = await getRecentMovements(5)
-  } catch (error) {
-    console.error('Error loading data:', error)
+    console.log('✅ [InventoryDashboard] Recent movements loaded:', recentMovements.value.length)
+    
+    console.log('✅ [InventoryDashboard] All data loaded successfully!')
+  } catch (error: any) {
+    console.error('❌ [InventoryDashboard] Error loading data:', error)
+    console.error('❌ [InventoryDashboard] Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    })
   } finally {
     loading.value = false
+    console.log('🏁 [InventoryDashboard] Refresh data completed, loading:', loading.value)
   }
 }
 
@@ -310,8 +331,38 @@ const formatDate = (timestamp: any) => {
       </Card>
     </div>
 
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <div v-if="loading" class="flex flex-col items-center justify-center py-12 space-y-4">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <p class="text-sm text-muted-foreground">Loading inventory data...</p>
+      <p class="text-xs text-muted-foreground">Check browser console untuk melihat proses loading</p>
+    </div>
+
+    <div v-else-if="stocks.length === 0 && !loading" class="flex flex-col items-center justify-center py-12 space-y-4">
+      <Package class="h-16 w-16 text-muted-foreground" />
+      <div class="text-center">
+        <h3 class="text-lg font-semibold">Belum Ada Data Stock</h3>
+        <p class="text-sm text-muted-foreground mt-2">
+          Anda perlu membuat Warehouse dan Stock Items terlebih dahulu
+        </p>
+        <p class="text-xs text-red-600 mt-4">
+          ⚠️ Jika data Products sudah ada tapi Stock tidak muncul, pastikan:
+        </p>
+        <ul class="text-xs text-muted-foreground mt-2 space-y-1">
+          <li>✓ Ad blocker sudah dinonaktifkan untuk situs ini</li>
+          <li>✓ Collection 'stock' sudah dibuat di Firestore</li>
+          <li>✓ Collection 'warehouses' sudah dibuat di Firestore</li>
+        </ul>
+      </div>
+      <div class="flex gap-2">
+        <Button @click="refreshData">
+          <RefreshCw class="h-4 w-4 mr-2" />
+          Refresh Data
+        </Button>
+        <Button variant="outline" @click="$router.push('/inventory/adjustments')">
+          <Package class="h-4 w-4 mr-2" />
+          Buat Stock Movement
+        </Button>
+      </div>
     </div>
 
     <div v-else class="grid gap-6 lg:grid-cols-3">
