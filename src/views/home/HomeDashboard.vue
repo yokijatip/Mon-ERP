@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import VueApexCharts  from "vue3-apexcharts";
 import {
   TrendingUp,
   TrendingDown,
@@ -59,10 +60,183 @@ const statsCards = ref([
   }
 ])
 
-const revenueData = ref({
-  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-  data2024: [15, 8, 12, 28, 18, 10, 15],
-  data2023: [-10, -15, -12, -20, -18, -20, -18]
+// Revenue Chart Data
+const revenueSeries = ref([
+  {
+    name: '2024',
+    data: [15, 8, 12, 28, 18, 10, 15]
+  },
+  {
+    name: '2023',
+    data: [10, 15, 12, 20, 18, 20, 18]
+  }
+])
+
+const revenueOptions = ref({
+  chart: {
+    type: 'bar',
+    height: 300,
+    toolbar: { show: false },
+    fontFamily: 'inherit'
+  },
+  plotOptions: {
+    bar: {
+      horizontal: false,
+      columnWidth: '55%',
+      borderRadius: 4
+    }
+  },
+  dataLabels: { enabled: false },
+  stroke: {
+    show: true,
+    width: 2,
+    colors: ['transparent']
+  },
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
+  },
+  colors: ['#3b82f6', '#22d3ee'],
+  legend: {
+    position: 'top',
+    horizontalAlign: 'left'
+  },
+  grid: {
+    borderColor: '#f1f5f9'
+  }
+})
+
+// Growth Radial Chart
+const growthSeries = ref([78])
+const growthOptions = ref({
+  chart: {
+    type: 'radialBar',
+    height: 280
+  },
+  plotOptions: {
+    radialBar: {
+      hollow: {
+        size: '65%'
+      },
+      dataLabels: {
+        name: {
+          show: true,
+          fontSize: '14px',
+          color: '#64748b',
+          offsetY: 10
+        },
+        value: {
+          show: true,
+          fontSize: '32px',
+          fontWeight: 'bold',
+          color: '#0f172a',
+          offsetY: -10,
+          formatter: (val: number) => `${val}%`
+        }
+      }
+    }
+  },
+  colors: ['#6366f1'],
+  labels: ['Growth']
+})
+
+// Profile Report Line Chart
+const profileSeries = ref([{
+  name: 'Revenue',
+  data: [30, 40, 35, 50, 49, 60, 70, 65, 75, 80]
+}])
+
+const profileOptions = ref({
+  chart: {
+    type: 'area',
+    height: 100,
+    sparkline: { enabled: true }
+  },
+  stroke: {
+    curve: 'smooth',
+    width: 3
+  },
+  fill: {
+    type: 'gradient',
+    gradient: {
+      shadeIntensity: 1,
+      opacityFrom: 0.4,
+      opacityTo: 0.1
+    }
+  },
+  colors: ['#f59e0b']
+})
+
+// Order Statistics Donut Chart
+const orderSeries = ref([82.5, 23.8, 0.849, 0.099])
+const orderOptions = ref({
+  chart: {
+    type: 'donut',
+    height: 200
+  },
+  labels: ['Electronic', 'Fashion', 'Decor', 'Sports'],
+  colors: ['#6366f1', '#22c55e', '#06b6d4', '#64748b'],
+  legend: { show: false },
+  dataLabels: { enabled: false },
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '70%',
+        labels: {
+          show: true,
+          name: { show: false },
+          value: {
+            show: true,
+            fontSize: '12px',
+            fontWeight: 400,
+            color: '#64748b',
+            formatter: () => '38%'
+          },
+          total: {
+            show: true,
+            label: 'Weekly',
+            fontSize: '12px',
+            color: '#64748b'
+          }
+        }
+      }
+    }
+  }
+})
+
+// Income Line Chart
+const incomeSeries = ref([{
+  name: 'Income',
+  data: [70, 60, 50, 35, 45, 55, 40, 30, 25]
+}])
+
+const incomeOptions = ref({
+  chart: {
+    type: 'line',
+    height: 130,
+    toolbar: { show: false },
+    zoom: { enabled: false }
+  },
+  stroke: {
+    curve: 'smooth',
+    width: 3
+  },
+  markers: {
+    size: [0, 0, 0, 0, 0, 0, 0, 0, 6],
+    colors: ['#6366f1'],
+    strokeColors: '#fff',
+    strokeWidth: 2
+  },
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+    labels: { show: false }
+  },
+  yaxis: { show: false },
+  grid: { show: false },
+  colors: ['#6366f1'],
+  tooltip: {
+    enabled: true,
+    x: { show: true }
+  }
 })
 
 const orderCategories = ref([
@@ -146,16 +320,13 @@ const selectedYear = ref('2023')
 </script>
 
 <template>
-  <div class="space-y-6 p-6">
+  <div class="space-y-4">
     <!-- Header -->
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">{{ getGreeting() }}!</h1>
+      <h1 class="text-2xl font-bold tracking-tight">{{ getGreeting() }}!</h1>
       <p class="text-muted-foreground mt-1">
-        You have done 72% more sales today. Check your new raising badge in your profile.
+        You have done 72% more sales today
       </p>
-      <Button variant="outline" class="mt-3" size="sm">
-        View Badges
-      </Button>
     </div>
 
     <!-- Stats Grid -->
@@ -189,38 +360,19 @@ const selectedYear = ref('2023')
       <Card class="lg:col-span-2">
         <CardHeader>
           <div class="flex items-center justify-between">
-            <div>
-              <CardTitle>Total Revenue</CardTitle>
-              <div class="flex items-center gap-4 mt-2">
-                <div class="flex items-center gap-2">
-                  <div class="w-3 h-3 rounded-full bg-blue-600"></div>
-                  <span class="text-sm">2024</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <div class="w-3 h-3 rounded-full bg-cyan-400"></div>
-                  <span class="text-sm">2023</span>
-                </div>
-              </div>
-            </div>
+            <CardTitle>Total Revenue</CardTitle>
             <Button variant="ghost" size="icon">
               <MoreVertical class="h-4 w-4" />
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div class="h-[300px] flex items-end justify-around gap-4 px-4">
-            <div v-for="(label, index) in revenueData.labels" :key="label" class="flex-1 flex flex-col items-center gap-1">
-              <div class="w-full flex flex-col items-center gap-1">
-                <div class="w-12 bg-blue-600 rounded-t"
-                     :style="{ height: `${Math.abs(revenueData.data2024[index] || 0) * 8}px` }">
-                </div>
-                <div class="w-12 bg-cyan-400 rounded-b"
-                     :style="{ height: `${Math.abs(revenueData.data2023[index] || 0) * 8}px` }">
-                </div>
-              </div>
-              <span class="text-xs text-muted-foreground mt-2">{{ label }}</span>
-            </div>
-          </div>
+          <VueApexCharts
+              type="bar"
+              height="300"
+              :options="revenueOptions"
+              :series="revenueSeries"
+          />
         </CardContent>
       </Card>
 
@@ -234,18 +386,13 @@ const selectedYear = ref('2023')
             </Button>
           </div>
         </CardHeader>
-        <CardContent class="flex flex-col items-center justify-center py-8">
-          <div class="relative w-40 h-40 mb-4">
-            <svg class="w-full h-full transform -rotate-90">
-              <circle cx="80" cy="80" r="70" stroke="#e5e7eb" stroke-width="12" fill="none" />
-              <circle cx="80" cy="80" r="70" stroke="#6366f1" stroke-width="12" fill="none"
-                      stroke-dasharray="440" stroke-dashoffset="97" stroke-linecap="round" />
-            </svg>
-            <div class="absolute inset-0 flex flex-col items-center justify-center">
-              <div class="text-4xl font-bold">78%</div>
-              <div class="text-sm text-muted-foreground">Growth</div>
-            </div>
-          </div>
+        <CardContent class="flex flex-col items-center justify-center">
+          <VueApexCharts
+              type="radialBar"
+              height="280"
+              :options="growthOptions"
+              :series="growthSeries"
+          />
           <p class="text-center text-muted-foreground mb-6">62% Company Growth</p>
           <div class="grid grid-cols-2 gap-4 w-full">
             <div class="flex items-center gap-2">
@@ -285,18 +432,12 @@ const selectedYear = ref('2023')
             <span class="text-sm font-medium text-green-600">68.2%</span>
           </div>
           <div class="text-3xl font-bold mb-6">$84,686k</div>
-          <div class="h-24">
-            <svg class="w-full h-full" viewBox="0 0 200 60" preserveAspectRatio="none">
-              <polyline
-                  points="0,40 30,35 60,45 90,25 120,30 150,15 180,20 200,10"
-                  fill="none"
-                  stroke="#f59e0b"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-              />
-            </svg>
-          </div>
+          <VueApexCharts
+              type="area"
+              height="100"
+              :options="profileOptions"
+              :series="profileSeries"
+          />
         </CardContent>
       </Card>
 
@@ -313,19 +454,12 @@ const selectedYear = ref('2023')
         </CardHeader>
         <CardContent>
           <div class="flex flex-col items-center mb-6">
-            <div class="relative w-32 h-32">
-              <svg class="w-full h-full transform -rotate-90">
-                <circle cx="64" cy="64" r="56" stroke="#e5e7eb" stroke-width="16" fill="none" />
-                <circle cx="64" cy="64" r="56" stroke="#6366f1" stroke-width="16" fill="none"
-                        stroke-dasharray="352" stroke-dashoffset="88" />
-                <circle cx="64" cy="64" r="56" stroke="#22c55e" stroke-width="16" fill="none"
-                        stroke-dasharray="352" stroke-dashoffset="220" />
-              </svg>
-              <div class="absolute inset-0 flex flex-col items-center justify-center">
-                <div class="text-sm text-muted-foreground">38%</div>
-                <div class="text-xs text-muted-foreground">Weekly</div>
-              </div>
-            </div>
+            <VueApexCharts
+                type="donut"
+                height="200"
+                :options="orderOptions"
+                :series="orderSeries"
+            />
             <div class="text-3xl font-bold mt-4">8,258</div>
             <div class="text-sm text-muted-foreground">Total Orders</div>
           </div>
@@ -390,21 +524,14 @@ const selectedYear = ref('2023')
             </div>
           </div>
 
-          <div class="h-32 mb-4">
-            <svg class="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
-              <polyline
-                  points="0,70 40,60 80,50 120,35 160,45 200,55 240,40 280,30 300,25"
-                  fill="none"
-                  stroke="#6366f1"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-              />
-              <circle cx="300" cy="25" r="6" fill="#6366f1" stroke="white" stroke-width="2" />
-            </svg>
-          </div>
+          <VueApexCharts
+              type="line"
+              height="130"
+              :options="incomeOptions"
+              :series="incomeSeries"
+          />
 
-          <div class="grid grid-cols-7 gap-2 text-xs text-muted-foreground text-center">
+          <div class="grid grid-cols-7 gap-2 text-xs text-muted-foreground text-center mt-4">
             <div>Jan</div>
             <div>Feb</div>
             <div>Mar</div>

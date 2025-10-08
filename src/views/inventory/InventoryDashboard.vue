@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import VueApexCharts from 'vue3-apexcharts'
 import {
   TrendingUp,
   TrendingDown,
@@ -52,6 +53,64 @@ const inventoryStats = ref([
     color: 'bg-green-100 text-green-600',
     description: 'Inventory worth'
   }
+])
+
+// Stock Movement Chart
+const stockMovementSeries = ref([
+  {
+    name: 'Stock In',
+    data: [120, 150, 180, 140, 200, 170, 190, 210, 180, 220]
+  },
+  {
+    name: 'Stock Out',
+    data: [100, 130, 150, 120, 170, 150, 160, 180, 160, 190]
+  }
+])
+
+const stockMovementOptions = ref({
+  chart: {
+    type: 'bar',
+    height: 300,
+    toolbar: { show: false },
+    fontFamily: 'inherit'
+  },
+  plotOptions: {
+    bar: {
+      horizontal: false,
+      columnWidth: '60%',
+      borderRadius: 4
+    }
+  },
+  dataLabels: { enabled: false },
+  stroke: {
+    show: true,
+    width: 2,
+    colors: ['transparent']
+  },
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct']
+  },
+  colors: ['#22c55e', '#3b82f6'],
+  legend: {
+    position: 'top',
+    horizontalAlign: 'left'
+  },
+  grid: {
+    borderColor: '#f1f5f9'
+  },
+  yaxis: {
+    title: {
+      text: 'Quantity'
+    }
+  }
+})
+
+// Category Distribution
+const categoryDistribution = ref([
+  { name: 'Electronics', percentage: 42, value: '$504K', color: 'bg-blue-600' },
+  { name: 'Accessories', percentage: 28, value: '$336K', color: 'bg-green-600' },
+  { name: 'Peripherals', percentage: 18, value: '$216K', color: 'bg-yellow-600' },
+  { name: 'Others', percentage: 12, value: '$144K', color: 'bg-gray-600' }
 ])
 
 const topProducts = ref([
@@ -135,19 +194,6 @@ const recentMovements = ref([
   }
 ])
 
-const categoryDistribution = ref([
-  { name: 'Electronics', percentage: 42, value: '$504K', color: 'bg-blue-600' },
-  { name: 'Accessories', percentage: 28, value: '$336K', color: 'bg-green-600' },
-  { name: 'Peripherals', percentage: 18, value: '$216K', color: 'bg-yellow-600' },
-  { name: 'Others', percentage: 12, value: '$144K', color: 'bg-gray-600' }
-])
-
-const monthlyTrend = ref({
-  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
-  stockIn: [120, 150, 180, 140, 200, 170, 190, 210, 180, 220],
-  stockOut: [100, 130, 150, 120, 170, 150, 160, 180, 160, 190]
-})
-
 function getStatusColor(status: string) {
   switch (status) {
     case 'In Stock': return 'bg-green-100 text-green-700'
@@ -199,7 +245,7 @@ function getMovementColor(type: string) {
           <div class="flex items-center justify-between mt-2">
             <div class="flex items-center">
               <component :is="stat.isPositive ? TrendingUp : TrendingDown"
-                :class="[stat.isPositive ? 'text-green-600' : 'text-red-600', 'h-4 w-4 mr-1']" />
+                         :class="[stat.isPositive ? 'text-green-600' : 'text-red-600', 'h-4 w-4 mr-1']" />
               <span :class="[stat.isPositive ? 'text-green-600' : 'text-red-600', 'text-sm font-medium']">
                 {{ stat.change }}
               </span>
@@ -222,32 +268,14 @@ function getMovementColor(type: string) {
               <MoreVertical class="h-4 w-4" />
             </Button>
           </div>
-          <div class="flex items-center gap-4 mt-4">
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 rounded-full bg-green-600"></div>
-              <span class="text-sm">Stock In</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 rounded-full bg-blue-600"></div>
-              <span class="text-sm">Stock Out</span>
-            </div>
-          </div>
         </CardHeader>
         <CardContent>
-          <div class="h-[300px] flex items-end justify-around gap-2">
-            <div v-for="(label, index) in monthlyTrend.labels" :key="label"
-              class="flex-1 flex flex-col items-center gap-1">
-              <div class="w-full flex justify-center gap-1">
-                <div class="w-4 bg-green-600 rounded-t"
-                  :style="{ height: `${(monthlyTrend.stockIn[index] || 0) * 1.2}px` }">
-                </div>
-                <div class="w-4 bg-blue-600 rounded-t"
-                  :style="{ height: `${(monthlyTrend.stockOut[index] || 0) * 1.2}px` }">
-                </div>
-              </div>
-              <span class="text-xs text-muted-foreground mt-2">{{ label }}</span>
-            </div>
-          </div>
+          <apexchart
+              type="bar"
+              height="300"
+              :options="stockMovementOptions"
+              :series="stockMovementSeries"
+          />
         </CardContent>
       </Card>
 
@@ -268,7 +296,7 @@ function getMovementColor(type: string) {
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2">
                 <div :class="[category.color, 'h-2 rounded-full']"
-                  :style="{ width: `${category.percentage}%` }">
+                     :style="{ width: `${category.percentage}%` }">
                 </div>
               </div>
             </div>
@@ -300,7 +328,7 @@ function getMovementColor(type: string) {
         <CardContent>
           <div class="space-y-3">
             <div v-for="product in topProducts" :key="product.sku"
-              class="flex items-center justify-between p-3 rounded-lg border">
+                 class="flex items-center justify-between p-3 rounded-lg border">
               <div class="flex-1">
                 <div class="font-medium">{{ product.name }}</div>
                 <div class="text-sm text-muted-foreground">SKU: {{ product.sku }} • {{ product.category }}</div>
@@ -331,7 +359,7 @@ function getMovementColor(type: string) {
         <CardContent>
           <div class="space-y-3">
             <div v-for="movement in recentMovements" :key="movement.reference"
-              class="flex items-start gap-3 pb-3 border-b last:border-0">
+                 class="flex items-start gap-3 pb-3 border-b last:border-0">
               <Badge :class="getMovementColor(movement.type)" class="border-0 mt-1">
                 {{ movement.type }}
               </Badge>
@@ -343,7 +371,7 @@ function getMovementColor(type: string) {
               </div>
               <div class="text-right">
                 <div class="font-semibold text-sm"
-                  :class="movement.quantity > 0 ? 'text-green-600' : 'text-red-600'">
+                     :class="movement.quantity > 0 ? 'text-green-600' : 'text-red-600'">
                   {{ movement.quantity > 0 ? '+' : '' }}{{ movement.quantity }}
                 </div>
               </div>

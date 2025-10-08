@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import VueApexCharts from 'vue3-apexcharts'
 import {
   TrendingUp,
   TrendingDown,
@@ -56,16 +57,141 @@ const financeStats = ref([
   }
 ])
 
-const revenueVsExpenses = ref({
-  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
-  revenue: [65, 70, 75, 80, 72, 88, 92, 95, 85, 90],
-  expenses: [35, 38, 42, 45, 40, 48, 50, 52, 48, 50]
+// Revenue vs Expenses Chart
+const revenueExpensesSeries = ref([
+  {
+    name: 'Revenue',
+    data: [65, 70, 75, 80, 72, 88, 92, 95, 85, 90]
+  },
+  {
+    name: 'Expenses',
+    data: [35, 38, 42, 45, 40, 48, 50, 52, 48, 50]
+  }
+])
+
+const revenueExpensesOptions = ref({
+  chart: {
+    type: 'bar',
+    height: 300,
+    toolbar: { show: false },
+    fontFamily: 'inherit'
+  },
+  plotOptions: {
+    bar: {
+      horizontal: false,
+      columnWidth: '55%',
+      borderRadius: 4
+    }
+  },
+  dataLabels: { enabled: false },
+  stroke: {
+    show: true,
+    width: 2,
+    colors: ['transparent']
+  },
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct']
+  },
+  colors: ['#22c55e', '#ef4444'],
+  legend: {
+    position: 'top',
+    horizontalAlign: 'left'
+  },
+  grid: {
+    borderColor: '#f1f5f9'
+  },
+  yaxis: {
+    title: {
+      text: 'Amount ($K)'
+    }
+  }
 })
 
-const cashFlowData = ref({
-  labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-  inflow: [120000, 145000, 132000, 158000],
-  outflow: [85000, 92000, 88000, 95000]
+// Profit Margin Area Chart
+const profitMarginSeries = ref([{
+  name: 'Profit Margin',
+  data: [45, 35, 38, 28, 32, 22, 26, 18, 23, 20]
+}])
+
+const profitMarginOptions = ref({
+  chart: {
+    type: 'area',
+    height: 130,
+    toolbar: { show: false },
+    sparkline: { enabled: false }
+  },
+  stroke: {
+    curve: 'smooth',
+    width: 3
+  },
+  fill: {
+    type: 'gradient',
+    gradient: {
+      shadeIntensity: 1,
+      opacityFrom: 0.4,
+      opacityTo: 0.1,
+      stops: [0, 90, 100]
+    }
+  },
+  dataLabels: { enabled: false },
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+    labels: { show: false }
+  },
+  yaxis: { show: false },
+  grid: { show: false },
+  colors: ['#22c55e'],
+  tooltip: {
+    enabled: true,
+    y: {
+      formatter: (val: number) => `${val}%`
+    }
+  }
+})
+
+// Expense Breakdown Donut
+const expenseSeries = ref([38.6, 27.5, 17.5, 10.6, 5.8])
+const expenseOptions = ref({
+  chart: {
+    type: 'donut',
+    height: 280
+  },
+  labels: ['Salaries & Wages', 'Operations', 'Marketing', 'Utilities', 'Others'],
+  colors: ['#3b82f6', '#22c55e', '#eab308', '#a855f7', '#6b7280'],
+  legend: {
+    position: 'bottom',
+    horizontalAlign: 'center'
+  },
+  dataLabels: {
+    enabled: true,
+    formatter: (val: number) => `${val.toFixed(1)}%`
+  },
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '65%',
+        labels: {
+          show: true,
+          name: {
+            show: true,
+            fontSize: '14px'
+          },
+          value: {
+            show: true,
+            fontSize: '20px',
+            fontWeight: 'bold',
+            formatter: (val: string) => `${val}%`
+          },
+          total: {
+            show: true,
+            label: 'Total',
+            fontSize: '12px',
+            formatter: () => '$324.68K'
+          }
+        }
+      }
+    }
+  }
 })
 
 const topExpenses = ref([
@@ -162,6 +288,11 @@ const recentTransactions = ref([
   }
 ])
 
+const cashFlowData = ref({
+  labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+  inflow: [120000, 145000, 132000, 158000],
+  outflow: [85000, 92000, 88000, 95000]
+})
 
 const accountsReceivable = ref([
   {
@@ -213,7 +344,7 @@ function getStatusColor(status: string) {
 </script>
 
 <template>
-  <div class="space-y-6 p-6">
+  <div class="space-y-4">
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-bold tracking-tight">Finance Dashboard</h1>
@@ -244,7 +375,7 @@ function getStatusColor(status: string) {
           <div class="flex items-center justify-between mt-2">
             <div class="flex items-center">
               <component :is="stat.isPositive ? TrendingUp : TrendingDown"
-                :class="[stat.isPositive ? 'text-green-600' : 'text-red-600', 'h-4 w-4 mr-1']" />
+                         :class="[stat.isPositive ? 'text-green-600' : 'text-red-600', 'h-4 w-4 mr-1']" />
               <span :class="[stat.isPositive ? 'text-green-600' : 'text-red-600', 'text-sm font-medium']">
                 {{ stat.change }}
               </span>
@@ -267,32 +398,14 @@ function getStatusColor(status: string) {
               <MoreVertical class="h-4 w-4" />
             </Button>
           </div>
-          <div class="flex items-center gap-4 mt-4">
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 rounded-full bg-green-600"></div>
-              <span class="text-sm">Revenue</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 rounded-full bg-red-600"></div>
-              <span class="text-sm">Expenses</span>
-            </div>
-          </div>
         </CardHeader>
         <CardContent>
-          <div class="h-[300px] flex items-end justify-around gap-2">
-            <div v-for="(label, index) in revenueVsExpenses.labels" :key="label"
-              class="flex-1 flex flex-col items-center gap-1">
-              <div class="w-full flex justify-center gap-1">
-                <div class="w-5 bg-green-600 rounded-t"
-                  :style="{ height: `${(revenueVsExpenses.revenue[index] || 0) * 3}px` }">
-                </div>
-                <div class="w-5 bg-red-600 rounded-t"
-                  :style="{ height: `${(revenueVsExpenses.expenses[index] || 0) * 3}px` }">
-                </div>
-              </div>
-              <span class="text-xs text-muted-foreground mt-2">{{ label }}</span>
-            </div>
-          </div>
+          <VueApexCharts
+              type="bar"
+              height="300"
+              :options="revenueExpensesOptions"
+              :series="revenueExpensesSeries"
+          />
         </CardContent>
       </Card>
 
@@ -313,26 +426,14 @@ function getStatusColor(status: string) {
             </div>
           </div>
 
-          <div class="h-32 mb-4">
-            <svg class="w-full h-full" viewBox="0 0 200 80" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="profitGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" style="stop-color:#22c55e;stop-opacity:0.3" />
-                  <stop offset="100%" style="stop-color:#22c55e;stop-opacity:0" />
-                </linearGradient>
-              </defs>
-              <polyline
-                points="0,45 22,35 44,38 66,28 88,32 110,22 132,26 154,18 176,23 200,20"
-                fill="url(#profitGradient)"
-                stroke="#22c55e"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
+          <VueApexCharts
+              type="area"
+              height="130"
+              :options="profitMarginOptions"
+              :series="profitMarginSeries"
+          />
 
-          <div class="space-y-3">
+          <div class="space-y-3 mt-4">
             <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
               <div>
                 <div class="text-sm font-medium">Average Margin</div>
@@ -417,30 +518,12 @@ function getStatusColor(status: string) {
           </div>
         </CardHeader>
         <CardContent>
-          <div class="space-y-4">
-            <div v-for="expense in topExpenses" :key="expense.category">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex-1">
-                  <div class="text-sm font-medium">{{ expense.category }}</div>
-                  <div class="text-xs text-muted-foreground">{{ expense.percentage }}%</div>
-                </div>
-                <div class="text-right">
-                  <div class="text-sm font-semibold">{{ expense.amount }}</div>
-                  <div :class="[
-                    'text-xs',
-                    expense.isPositive ? 'text-green-600' : 'text-red-600'
-                  ]">
-                    {{ expense.change }}
-                  </div>
-                </div>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div :class="[expense.color, 'h-2 rounded-full']"
-                  :style="{ width: `${expense.percentage}%` }">
-                </div>
-              </div>
-            </div>
-          </div>
+          <VueApexCharts
+              type="donut"
+              height="280"
+              :options="expenseOptions"
+              :series="expenseSeries"
+          />
         </CardContent>
       </Card>
 
@@ -459,14 +542,14 @@ function getStatusColor(status: string) {
         <CardContent>
           <div class="space-y-3">
             <div v-for="transaction in recentTransactions" :key="transaction.reference"
-              class="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50">
+                 class="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50">
               <div class="flex items-center gap-3 flex-1">
                 <div :class="[
                   getTransactionColor(transaction.type),
                   'p-2 rounded-lg'
                 ]">
                   <component :is="transaction.type === 'income' ? ArrowUpRight : ArrowDownRight"
-                    class="h-4 w-4" />
+                             class="h-4 w-4" />
                 </div>
                 <div class="flex-1">
                   <div class="font-medium text-sm">{{ transaction.description }}</div>
@@ -506,8 +589,8 @@ function getStatusColor(status: string) {
         <CardContent>
           <div class="space-y-3 mb-4">
             <div v-for="account in accountsReceivable" :key="account.invoice"
-              class="p-3 rounded-lg border"
-              :class="account.overdue ? 'border-red-200 bg-red-50' : ''">
+                 class="p-3 rounded-lg border"
+                 :class="account.overdue ? 'border-red-200 bg-red-50' : ''">
               <div class="flex justify-between items-start mb-2">
                 <div>
                   <div class="font-medium text-sm">{{ account.client }}</div>
