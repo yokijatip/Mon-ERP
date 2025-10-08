@@ -3,6 +3,13 @@ import {useAuth} from "@/composables/useAuth.ts";
 
 const { user } = useAuth()
 
+// Greetings
+function getGreeting() {
+  const hour = new Date().getHours()
+  if (hour < 12) return "Good Morning"
+  if (hour < 18) return "Good Afternoon"
+  return "Good Evening"
+}
 </script>
 
 <template>
@@ -11,7 +18,12 @@ const { user } = useAuth()
 
 <!--  Title or Header Start  -->
     <div>
-      <h1>Welcome, <span class="font-bold">{{ user?.name | "Guest" }}</span></h1>
+      <!-- Title -->
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight">Welcome to your ERP Dashboard</h1>
+        <p class="text-muted-foreground">{{ getGreeting() }}, <span>{{ user?.displayName || 'User' }}</span></p>
+        
+      </div>
     </div>
 <!--  Title or Hedaer End  -->
 
