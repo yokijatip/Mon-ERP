@@ -17,7 +17,17 @@ import {
   Trophy,
   MoreVertical
 } from 'lucide-vue-next'
-import DateRangePicker from "@/components/DateRangePicker.vue";
+import type { DateRange } from "reka-ui"
+import type { Ref } from "vue"
+import {
+  CalendarDate,
+  DateFormatter,
+  getLocalTimeZone,
+} from "@internationalized/date"
+import { CalendarIcon } from "lucide-vue-next"
+import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { RangeCalendar } from "@/components/ui/range-calendar"
 
 
 function getGreeting() {
@@ -321,12 +331,14 @@ const incomeTab = ref('income')
 const selectedYear = ref('2023')
 
 // Date Range Picker
-const today = new Date()
-const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-const dateRange = ref({
-  start: firstDayOfMonth, // First day of current month
-  end: new Date() // Today
+const df = new DateFormatter("en-US", {
+  dateStyle: "medium",
 })
+
+const value = ref({
+  start: new CalendarDate(2022, 1, 20),
+  end: new CalendarDate(2022, 1, 20).add({ days: 20 }),
+}) as Ref<DateRange>
 </script>
 
 <template>
@@ -336,7 +348,7 @@ const dateRange = ref({
 
       <!-- Title -->
       <div>
-        <h1 class="text-2xl font-bold tracking-tight">{{ getGreeting() }}!</h1>
+        <h1 class="text-3xl font-bold tracking-tight">{{ getGreeting() }}!</h1>
         <p class="text-muted-foreground mt-1">
           You have done 72% more sales today
         </p>
@@ -344,19 +356,41 @@ const dateRange = ref({
 
       <!-- Date range picker and Download -->
       <div>
-        <DateRangePicker
-            v-model="dateRange"
-            placeholder="Tanggal"
-            :number-of-months="2"
-            button-class="w-[220px]"
-        />
+        <Popover>
+    <PopoverTrigger as-child>
+      <Button
+        variant="outline"
+        :class="cn(
+          'w-[280px] justify-start text-left font-normal',
+          !value && 'text-muted-foreground',
+        )"
+      >
+        <CalendarIcon class="mr-2 h-4 w-4" />
+        <template v-if="value.start">
+          <template v-if="value.end">
+            {{ df.format(value.start.toDate(getLocalTimeZone())) }} - {{ df.format(value.end.toDate(getLocalTimeZone())) }}
+          </template>
+
+          <template v-else>
+            {{ df.format(value.start.toDate(getLocalTimeZone())) }}
+          </template>
+        </template>
+        <template v-else>
+          Pick a date
+        </template>
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent class="w-auto p-0">
+      <RangeCalendar v-model="value" initial-focus :number-of-months="2" @update:start-value="(startDate) => value.start = startDate" />
+    </PopoverContent>
+  </Popover>
       </div>
     </div>
 
     <!-- Stats Grid -->
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card v-for="stat in statsCards" :key="stat.title" class="relative">
-        <CardHeader class="flex flex-row items-center justify-between pb-2">
+        <CardHeader class="flex flex-row items-center justify-between">
           <div :class="[stat.color, 'p-2 rounded-lg']">
             <component :is="stat.icon" class="h-5 w-5" />
           </div>
@@ -379,7 +413,7 @@ const dateRange = ref({
     </div>
 
     <!-- Main Content Grid -->
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid gap-4 lg:grid-cols-2">
       <!-- Total Revenue Chart -->
       <Card class="lg:col-span-2">
         <CardHeader>
@@ -413,7 +447,7 @@ const dateRange = ref({
         <CardContent class="flex flex-col items-center justify-center">
           <VueApexCharts
               type="radialBar"
-              height="280"
+              height="200"
               :options="growthOptions"
               :series="growthSeries"
           />
@@ -436,147 +470,7 @@ const dateRange = ref({
           </div>
         </CardContent>
       </Card>
-
-      <!-- Profile Report -->
-      <Card>
-        <CardHeader class="flex flex-row items-center justify-between pb-2">
-          <div>
-            <CardTitle class="text-base">Profile Report</CardTitle>
-            <Badge variant="secondary" class="mt-2 bg-yellow-100 text-yellow-700 border-0">
-              Year 2022
-            </Badge>
-          </div>
-          <Button variant="ghost" size="icon">
-            <MoreVertical class="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div class="flex items-center gap-2 mb-4">
-            <TrendingUp class="h-4 w-4 text-green-600" />
-            <span class="text-sm font-medium text-green-600">68.2%</span>
-          </div>
-          <div class="text-3xl font-bold mb-6">$84,686k</div>
-          <VueApexCharts
-              type="area"
-              height="100"
-              :options="profileOptions"
-              :series="profileSeries"
-          />
-        </CardContent>
-      </Card>
-
-      <!-- Order Statistics -->
-      <Card>
-        <CardHeader class="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Order Statistics</CardTitle>
-            <CardDescription>42.82k Total Sales</CardDescription>
-          </div>
-          <Button variant="ghost" size="icon">
-            <MoreVertical class="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div class="flex flex-col items-center mb-6">
-            <VueApexCharts
-                type="donut"
-                height="200"
-                :options="orderOptions"
-                :series="orderSeries"
-            />
-            <div class="text-3xl font-bold mt-4">8,258</div>
-            <div class="text-sm text-muted-foreground">Total Orders</div>
-          </div>
-
-          <div class="space-y-4">
-            <div v-for="category in orderCategories" :key="category.name"
-                 class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div :class="[category.color, 'p-2 rounded-lg']">
-                  <component :is="category.icon" class="h-4 w-4" />
-                </div>
-                <div>
-                  <div class="font-medium text-sm">{{ category.name }}</div>
-                  <div class="text-xs text-muted-foreground">{{ category.items }}</div>
-                </div>
-              </div>
-              <div class="font-semibold">{{ category.count }}</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <!-- Income/Expenses/Profit -->
-      <Card>
-        <CardHeader>
-          <div class="flex gap-2">
-            <Button
-                @click="incomeTab = 'income'"
-                :variant="incomeTab === 'income' ? 'default' : 'ghost'"
-                size="sm"
-            >
-              Income
-            </Button>
-            <Button
-                @click="incomeTab = 'expenses'"
-                :variant="incomeTab === 'expenses' ? 'default' : 'ghost'"
-                size="sm"
-            >
-              Expenses
-            </Button>
-            <Button
-                @click="incomeTab = 'profit'"
-                :variant="incomeTab === 'profit' ? 'default' : 'ghost'"
-                size="sm"
-            >
-              Profit
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div class="flex items-center gap-3 mb-6">
-            <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
-              <DollarSign class="h-5 w-5" />
-            </div>
-            <div>
-              <div class="text-sm text-muted-foreground">Total Income</div>
-              <div class="text-xl font-bold">$459.1k</div>
-            </div>
-            <div class="flex items-center text-green-600 text-sm ml-auto">
-              <TrendingUp class="h-4 w-4 mr-1" />
-              65%
-            </div>
-          </div>
-
-          <VueApexCharts
-              type="line"
-              height="130"
-              :options="incomeOptions"
-              :series="incomeSeries"
-          />
-
-          <div class="grid grid-cols-7 gap-2 text-xs text-muted-foreground text-center mt-4">
-            <div>Jan</div>
-            <div>Feb</div>
-            <div>Mar</div>
-            <div>Apr</div>
-            <div>May</div>
-            <div>Jun</div>
-            <div>Jul</div>
-          </div>
-
-          <div class="mt-6 p-4 bg-blue-50 rounded-lg flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
-              $6.5
-            </div>
-            <div>
-              <div class="font-medium text-sm">Income This Week</div>
-              <div class="text-xs text-muted-foreground">$39k less than last week</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
+      
       <!-- Transactions -->
       <Card>
         <CardHeader class="flex flex-row items-center justify-between">
@@ -609,5 +503,158 @@ const dateRange = ref({
         </CardContent>
       </Card>
     </div>
+
+    <!-- Secondary Content Grid -->
+<div class="grid grid-cols-3 gap-4">
+  <!-- Order Statistics (kiri besar) -->
+  <div class="col-span-2 row-span-2">
+    <Card>
+      <CardHeader class="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Order Statistics</CardTitle>
+          <CardDescription>42.82k Total Sales</CardDescription>
+        </div>
+        <Button variant="ghost" size="icon">
+          <MoreVertical class="h-4 w-4" />
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <div class="flex flex-col items-center mb-6">
+          <VueApexCharts
+            type="donut"
+            height="200"
+            :options="orderOptions"
+            :series="orderSeries"
+          />
+          <div class="text-3xl font-bold mt-4">8,258</div>
+          <div class="text-sm text-muted-foreground">Total Orders</div>
+        </div>
+
+        <div class="space-y-4">
+          <div
+            v-for="category in orderCategories"
+            :key="category.name"
+            class="flex items-center justify-between"
+          >
+            <div class="flex items-center gap-3">
+              <div :class="[category.color, 'p-2 rounded-lg']">
+                <component :is="category.icon" class="h-4 w-4" />
+              </div>
+              <div>
+                <div class="font-medium text-sm">{{ category.name }}</div>
+                <div class="text-xs text-muted-foreground">{{ category.items }}</div>
+              </div>
+            </div>
+            <div class="font-semibold">{{ category.count }}</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+
+  <!-- Profile Report (kanan atas) -->
+  <div class="col-span-1">
+    <Card>
+      <CardHeader class="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle class="text-base">Profile Report</CardTitle>
+          <Badge variant="secondary" class="mt-2 bg-yellow-100 text-yellow-700 border-0">
+            Year 2022
+          </Badge>
+        </div>
+        <Button variant="ghost" size="icon">
+          <MoreVertical class="h-4 w-4" />
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <div class="flex items-center gap-2 mb-4">
+          <TrendingUp class="h-4 w-4 text-green-600" />
+          <span class="text-sm font-medium text-green-600">68.2%</span>
+        </div>
+        <div class="text-3xl font-bold mb-6">$84,686k</div>
+        <VueApexCharts
+          type="area"
+          height="100"
+          :options="profileOptions"
+          :series="profileSeries"
+        />
+      </CardContent>
+    </Card>
+  </div>
+
+  <!-- Income / Expenses / Profit (kanan bawah) -->
+  <div class="col-span-1">
+    <Card class="gap-6">
+      <CardHeader>
+        <div class="flex gap-2">
+          <Button
+            @click="incomeTab = 'income'"
+            :variant="incomeTab === 'income' ? 'default' : 'ghost'"
+            size="sm"
+          >
+            Income
+          </Button>
+          <Button
+            @click="incomeTab = 'expenses'"
+            :variant="incomeTab === 'expenses' ? 'default' : 'ghost'"
+            size="sm"
+          >
+            Expenses
+          </Button>
+          <Button
+            @click="incomeTab = 'profit'"
+            :variant="incomeTab === 'profit' ? 'default' : 'ghost'"
+            size="sm"
+          >
+            Profit
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div class="flex items-center gap-3 mb-6">
+          <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+            <DollarSign class="h-5 w-5" />
+          </div>
+          <div>
+            <div class="text-sm text-muted-foreground">Total Income</div>
+            <div class="text-xl font-bold">$459.1k</div>
+          </div>
+          <div class="flex items-center text-green-600 text-sm ml-auto">
+            <TrendingUp class="h-4 w-4 mr-1" />
+            65%
+          </div>
+        </div>
+
+        <VueApexCharts
+          type="line"
+          height="130"
+          :options="incomeOptions"
+          :series="incomeSeries"
+        />
+
+        <div class="grid grid-cols-7 gap-2 text-xs text-muted-foreground text-center mt-4">
+          <div>Jan</div>
+          <div>Feb</div>
+          <div>Mar</div>
+          <div>Apr</div>
+          <div>May</div>
+          <div>Jun</div>
+          <div>Jul</div>
+        </div>
+
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg flex items-center gap-3">
+          <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+            $6.5
+          </div>
+          <div>
+            <div class="font-medium text-sm">Income This Week</div>
+            <div class="text-xs text-muted-foreground">$39k less than last week</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+</div>
+
   </div>
 </template>

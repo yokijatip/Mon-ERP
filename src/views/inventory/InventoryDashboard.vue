@@ -214,7 +214,7 @@ function getMovementColor(type: string) {
 </script>
 
 <template>
-  <div class="space-y-6 p-6">
+  <div class="space-y-4">
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-bold tracking-tight">Inventory Dashboard</h1>
@@ -270,7 +270,7 @@ function getMovementColor(type: string) {
           </div>
         </CardHeader>
         <CardContent>
-          <apexchart
+          <VueApexCharts
               type="bar"
               height="300"
               :options="stockMovementOptions"
