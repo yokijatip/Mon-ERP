@@ -17,6 +17,8 @@ import {
   Trophy,
   MoreVertical
 } from 'lucide-vue-next'
+import DateRangePicker from "@/components/DateRangePicker.vue";
+
 
 function getGreeting() {
   const hour = new Date().getHours()
@@ -317,16 +319,38 @@ const transactions = ref([
 
 const incomeTab = ref('income')
 const selectedYear = ref('2023')
+
+// Date Range Picker
+const today = new Date()
+const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+const dateRange = ref({
+  start: firstDayOfMonth, // First day of current month
+  end: new Date() // Today
+})
 </script>
 
 <template>
   <div class="space-y-4">
     <!-- Header -->
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight">{{ getGreeting() }}!</h1>
-      <p class="text-muted-foreground mt-1">
-        You have done 72% more sales today
-      </p>
+    <div class="flex items-center justify-between">
+
+      <!-- Title -->
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight">{{ getGreeting() }}!</h1>
+        <p class="text-muted-foreground mt-1">
+          You have done 72% more sales today
+        </p>
+      </div>
+
+      <!-- Date range picker and Download -->
+      <div>
+        <DateRangePicker
+            v-model="dateRange"
+            placeholder="Tanggal"
+            :number-of-months="2"
+            button-class="w-[220px]"
+        />
+      </div>
     </div>
 
     <!-- Stats Grid -->
