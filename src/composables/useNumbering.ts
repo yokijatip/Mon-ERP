@@ -14,6 +14,8 @@ type DocumentType =
     | 'customer'
     | 'supplier'
     | 'employee'
+    | 'stockMovement'
+    | 'warehouse'
 
 /**
  * Upsert helper: create if not exists, update if exists
@@ -60,7 +62,9 @@ export const useNumbering = () => {
         product: 'PRD-{0000}',
         customer: 'CUST-{0000}',
         supplier: 'SUPP-{0000}',
-        employee: 'EMP-{0000}'
+        employee: 'EMP-{0000}',
+        stockMovement: 'STM-{YYYY}{MM}-{####}',
+        warehouse: 'WH-{###}'
     }
 
     /**
