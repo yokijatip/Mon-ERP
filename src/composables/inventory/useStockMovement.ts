@@ -71,20 +71,24 @@ export const useStockMovement = () => {
 
     const loadMovements = async () => {
         try {
+            console.log('🔄 [useStockMovement] Loading movements from Firestore...')
             movements.value = await firestore.getAll()
+            console.log('✅ [useStockMovement] Movements loaded successfully:', movements.value.length, 'items', movements.value)
             return movements.value
         } catch (error) {
-            console.error('Error loading movements:', error)
+            console.error('❌ [useStockMovement] Error loading movements:', error)
             throw error
         }
     }
 
     const loadMovement = async (id: string) => {
         try {
+            console.log('🔄 [useStockMovement] Loading movement by ID:', id)
             currentMovement.value = await firestore.getById(id)
+            console.log('✅ [useStockMovement] Movement loaded:', currentMovement.value)
             return currentMovement.value
         } catch (error) {
-            console.error('Error loading movement:', error)
+            console.error('❌ [useStockMovement] Error loading movement:', error)
             throw error
         }
     }
@@ -93,7 +97,9 @@ export const useStockMovement = () => {
         movementData: Omit<StockMovement, 'id' | 'movementNumber' | 'createdAt' | 'createdBy'>
     ) => {
         try {
+            console.log('🔄 [useStockMovement] Creating movement...', movementData)
             const movementNumber = await generateNumber('stockMovement')
+            console.log('📝 [useStockMovement] Generated movement number:', movementNumber)
 
             const newMovement: Omit<StockMovement, 'id'> = {
                 ...movementData,
@@ -103,64 +109,80 @@ export const useStockMovement = () => {
             }
 
             const id = await firestore.create(newMovement)
+            console.log('✅ [useStockMovement] Movement created successfully, ID:', id)
             await loadMovements()
             return id
         } catch (error) {
-            console.error('Error creating movement:', error)
+            console.error('❌ [useStockMovement] Error creating movement:', error)
             throw error
         }
     }
 
     const getMovementsByProduct = async (productId: string) => {
         try {
-            return await firestore.getWhere('productId', '==', productId)
+            console.log('🔄 [useStockMovement] Getting movements by product:', productId)
+            const result = await firestore.getWhere('productId', '==', productId)
+            console.log('✅ [useStockMovement] Movements by product found:', result.length, 'items', result)
+            return result
         } catch (error) {
-            console.error('Error getting movements by product:', error)
+            console.error('❌ [useStockMovement] Error getting movements by product:', error)
             throw error
         }
     }
 
     const getMovementsByWarehouse = async (warehouseId: string) => {
         try {
-            return await firestore.getWithFilters([
+            console.log('🔄 [useStockMovement] Getting movements by warehouse:', warehouseId)
+            const result = await firestore.getWithFilters([
                 { field: 'fromWarehouseId', operator: '==', value: warehouseId }
             ])
+            console.log('✅ [useStockMovement] Movements by warehouse found:', result.length, 'items', result)
+            return result
         } catch (error) {
-            console.error('Error getting movements by warehouse:', error)
+            console.error('❌ [useStockMovement] Error getting movements by warehouse:', error)
             throw error
         }
     }
 
     const getMovementsByType = async (type: StockMovementType) => {
         try {
-            return await firestore.getWhere('type', '==', type)
+            console.log('🔄 [useStockMovement] Getting movements by type:', type)
+            const result = await firestore.getWhere('type', '==', type)
+            console.log('✅ [useStockMovement] Movements by type found:', result.length, 'items', result)
+            return result
         } catch (error) {
-            console.error('Error getting movements by type:', error)
+            console.error('❌ [useStockMovement] Error getting movements by type:', error)
             throw error
         }
     }
 
     const getMovementsByDateRange = async (startDate: Date, endDate: Date) => {
         try {
+            console.log('🔄 [useStockMovement] Getting movements by date range:', { startDate, endDate })
             const start = Timestamp.fromDate(startDate)
             const end = Timestamp.fromDate(endDate)
 
             const allMovements = await firestore.getAll()
-            return allMovements.filter(m => m.date >= start && m.date <= end)
+            const result = allMovements.filter(m => m.date >= start && m.date <= end)
+            console.log('✅ [useStockMovement] Movements by date range found:', result.length, 'items', result)
+            return result
         } catch (error) {
-            console.error('Error getting movements by date range:', error)
+            console.error('❌ [useStockMovement] Error getting movements by date range:', error)
             throw error
         }
     }
 
     const getRecentMovements = async (limit: number = 10) => {
         try {
+            console.log('🔄 [useStockMovement] Getting recent movements, limit:', limit)
             const allMovements = await firestore.getAll()
-            return allMovements
+            const result = allMovements
                 .sort((a, b) => b.date.seconds - a.date.seconds)
                 .slice(0, limit)
+            console.log('✅ [useStockMovement] Recent movements found:', result.length, 'items', result)
+            return result
         } catch (error) {
-            console.error('Error getting recent movements:', error)
+            console.error('❌ [useStockMovement] Error getting recent movements:', error)
             throw error
         }
     }

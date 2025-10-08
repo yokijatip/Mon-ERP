@@ -40,20 +40,24 @@ export const useWarehouse = () => {
 
     const loadWarehouses = async () => {
         try {
+            console.log('🔄 [useWarehouse] Loading warehouses from Firestore...')
             warehouses.value = await firestore.getAll()
+            console.log('✅ [useWarehouse] Warehouses loaded successfully:', warehouses.value.length, 'items', warehouses.value)
             return warehouses.value
         } catch (error) {
-            console.error('Error loading warehouses:', error)
+            console.error('❌ [useWarehouse] Error loading warehouses:', error)
             throw error
         }
     }
 
     const loadWarehouse = async (id: string) => {
         try {
+            console.log('🔄 [useWarehouse] Loading warehouse by ID:', id)
             currentWarehouse.value = await firestore.getById(id)
+            console.log('✅ [useWarehouse] Warehouse loaded:', currentWarehouse.value)
             return currentWarehouse.value
         } catch (error) {
-            console.error('Error loading warehouse:', error)
+            console.error('❌ [useWarehouse] Error loading warehouse:', error)
             throw error
         }
     }
@@ -62,6 +66,8 @@ export const useWarehouse = () => {
         warehouseData: Omit<Warehouse, 'id' | 'createdAt' | 'updatedAt'>
     ) => {
         try {
+            console.log('🔄 [useWarehouse] Creating warehouse...', warehouseData)
+            
             // Check if code already exists
             const existing = await firestore.getWhere('code', '==', warehouseData.code)
             if (existing.length > 0) {
@@ -77,16 +83,19 @@ export const useWarehouse = () => {
             }
 
             const id = await firestore.create(warehouseData)
+            console.log('✅ [useWarehouse] Warehouse created successfully, ID:', id)
             await loadWarehouses()
             return id
         } catch (error) {
-            console.error('Error creating warehouse:', error)
+            console.error('❌ [useWarehouse] Error creating warehouse:', error)
             throw error
         }
     }
 
     const updateWarehouse = async (id: string, warehouseData: Partial<Warehouse>) => {
         try {
+            console.log('🔄 [useWarehouse] Updating warehouse:', { id, data: warehouseData })
+            
             // If setting as default, unset other defaults
             if (warehouseData.isDefault) {
                 const defaultWarehouses = await firestore.getWhere('isDefault', '==', true)
@@ -98,29 +107,34 @@ export const useWarehouse = () => {
             }
 
             await firestore.update(id, warehouseData)
+            console.log('✅ [useWarehouse] Warehouse updated successfully')
             await loadWarehouses()
 
             if (currentWarehouse.value?.id === id) {
                 await loadWarehouse(id)
             }
         } catch (error) {
-            console.error('Error updating warehouse:', error)
+            console.error('❌ [useWarehouse] Error updating warehouse:', error)
             throw error
         }
     }
 
     const deleteWarehouse = async (id: string) => {
         try {
+            console.log('🔄 [useWarehouse] Deleting warehouse (soft delete):', id)
             await firestore.softDelete(id)
+            console.log('✅ [useWarehouse] Warehouse deleted successfully')
             await loadWarehouses()
         } catch (error) {
-            console.error('Error deleting warehouse:', error)
+            console.error('❌ [useWarehouse] Error deleting warehouse:', error)
             throw error
         }
     }
 
     const setDefaultWarehouse = async (id: string) => {
         try {
+            console.log('🔄 [useWarehouse] Setting default warehouse:', id)
+            
             // Unset all defaults first
             const allWarehouses = await firestore.getAll()
             for (const warehouse of allWarehouses) {
@@ -131,22 +145,24 @@ export const useWarehouse = () => {
 
             // Set new default
             await firestore.update(id, { isDefault: true })
+            console.log('✅ [useWarehouse] Default warehouse set successfully')
             await loadWarehouses()
         } catch (error) {
-            console.error('Error setting default warehouse:', error)
+            console.error('❌ [useWarehouse] Error setting default warehouse:', error)
             throw error
         }
     }
 
     const checkCodeExists = async (code: string, excludeId?: string): Promise<boolean> => {
         try {
+            console.log('🔄 [useWarehouse] Checking if code exists:', code)
             const existing = await firestore.getWhere('code', '==', code)
             if (excludeId) {
                 return existing.some(w => w.id !== excludeId)
             }
             return existing.length > 0
         } catch (error) {
-            console.error('Error checking code:', error)
+            console.error('❌ [useWarehouse] Error checking code:', error)
             return false
         }
     }

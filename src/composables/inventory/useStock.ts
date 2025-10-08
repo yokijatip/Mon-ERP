@@ -57,83 +57,105 @@ export const useStock = () => {
 
     const loadStocks = async () => {
         try {
+            console.log('🔄 [useStock] Loading stocks from Firestore...')
             stocks.value = await stockFirestore.getAll()
+            console.log('✅ [useStock] Stocks loaded successfully:', stocks.value.length, 'items', stocks.value)
             return stocks.value
         } catch (error) {
-            console.error('Error loading stocks:', error)
+            console.error('❌ [useStock] Error loading stocks:', error)
             throw error
         }
     }
 
     const loadWarehouses = async () => {
         try {
+            console.log('🔄 [useStock] Loading warehouses from Firestore...')
             warehouses.value = await warehouseFirestore.getWhere('isActive', '==', true)
+            console.log('✅ [useStock] Warehouses loaded successfully:', warehouses.value.length, 'items', warehouses.value)
             return warehouses.value
         } catch (error) {
-            console.error('Error loading warehouses:', error)
+            console.error('❌ [useStock] Error loading warehouses:', error)
             throw error
         }
     }
 
     const loadStock = async (id: string) => {
         try {
+            console.log('🔄 [useStock] Loading stock by ID:', id)
             currentStock.value = await stockFirestore.getById(id)
+            console.log('✅ [useStock] Stock loaded:', currentStock.value)
             return currentStock.value
         } catch (error) {
-            console.error('Error loading stock:', error)
+            console.error('❌ [useStock] Error loading stock:', error)
             throw error
         }
     }
 
     const getStockByProduct = async (productId: string, warehouseId?: string) => {
         try {
+            console.log('🔄 [useStock] Getting stock by product:', { productId, warehouseId })
+            let result
             if (warehouseId) {
-                return await stockFirestore.getWithFilters([
+                result = await stockFirestore.getWithFilters([
                     { field: 'productId', operator: '==', value: productId },
                     { field: 'warehouseId', operator: '==', value: warehouseId }
                 ])
+            } else {
+                result = await stockFirestore.getWhere('productId', '==', productId)
             }
-            return await stockFirestore.getWhere('productId', '==', productId)
+            console.log('✅ [useStock] Stock by product found:', result.length, 'items', result)
+            return result
         } catch (error) {
-            console.error('Error getting stock by product:', error)
+            console.error('❌ [useStock] Error getting stock by product:', error)
             throw error
         }
     }
 
     const getStockByWarehouse = async (warehouseId: string) => {
         try {
-            return await stockFirestore.getWhere('warehouseId', '==', warehouseId)
+            console.log('🔄 [useStock] Getting stock by warehouse:', warehouseId)
+            const result = await stockFirestore.getWhere('warehouseId', '==', warehouseId)
+            console.log('✅ [useStock] Stock by warehouse found:', result.length, 'items', result)
+            return result
         } catch (error) {
-            console.error('Error getting stock by warehouse:', error)
+            console.error('❌ [useStock] Error getting stock by warehouse:', error)
             throw error
         }
     }
 
     const getLowStockItems = async (threshold: number = 10) => {
         try {
+            console.log('🔄 [useStock] Getting low stock items, threshold:', threshold)
             const allStocks = await stockFirestore.getAll()
-            return allStocks.filter(s => s.availableQuantity < threshold && s.availableQuantity > 0)
+            const result = allStocks.filter(s => s.availableQuantity < threshold && s.availableQuantity > 0)
+            console.log('✅ [useStock] Low stock items found:', result.length, 'items', result)
+            return result
         } catch (error) {
-            console.error('Error getting low stock items:', error)
+            console.error('❌ [useStock] Error getting low stock items:', error)
             throw error
         }
     }
 
     const getOutOfStockItems = async () => {
         try {
-            return await stockFirestore.getWhere('availableQuantity', '==', 0)
+            console.log('🔄 [useStock] Getting out of stock items...')
+            const result = await stockFirestore.getWhere('availableQuantity', '==', 0)
+            console.log('✅ [useStock] Out of stock items found:', result.length, 'items', result)
+            return result
         } catch (error) {
-            console.error('Error getting out of stock items:', error)
+            console.error('❌ [useStock] Error getting out of stock items:', error)
             throw error
         }
     }
 
     const updateStock = async (id: string, data: Partial<Stock>) => {
         try {
+            console.log('🔄 [useStock] Updating stock:', { id, data })
             await stockFirestore.update(id, data)
+            console.log('✅ [useStock] Stock updated successfully')
             await loadStocks()
         } catch (error) {
-            console.error('Error updating stock:', error)
+            console.error('❌ [useStock] Error updating stock:', error)
             throw error
         }
     }
@@ -145,6 +167,7 @@ export const useStock = () => {
         reason?: string
     ) => {
         try {
+            console.log('🔄 [useStock] Adjusting stock:', { productId, warehouseId, quantityChange, reason })
             const stockItems = await getStockByProduct(productId, warehouseId)
 
             if (stockItems.length === 0) {
@@ -166,9 +189,10 @@ export const useStock = () => {
                 lastMovementAt: Timestamp.now()
             })
 
+            console.log('✅ [useStock] Stock adjusted successfully')
             await loadStocks()
         } catch (error) {
-            console.error('Error adjusting stock:', error)
+            console.error('❌ [useStock] Error adjusting stock:', error)
             throw error
         }
     }
@@ -179,6 +203,7 @@ export const useStock = () => {
         quantity: number
     ) => {
         try {
+            console.log('🔄 [useStock] Reserving stock:', { productId, warehouseId, quantity })
             const stockItems = await getStockByProduct(productId, warehouseId)
 
             if (stockItems.length === 0) {
@@ -197,9 +222,10 @@ export const useStock = () => {
                 lastMovementAt: Timestamp.now()
             })
 
+            console.log('✅ [useStock] Stock reserved successfully')
             await loadStocks()
         } catch (error) {
-            console.error('Error reserving stock:', error)
+            console.error('❌ [useStock] Error reserving stock:', error)
             throw error
         }
     }
@@ -210,6 +236,7 @@ export const useStock = () => {
         quantity: number
     ) => {
         try {
+            console.log('🔄 [useStock] Releasing reserved stock:', { productId, warehouseId, quantity })
             const stockItems = await getStockByProduct(productId, warehouseId)
 
             if (stockItems.length === 0) {
@@ -228,9 +255,10 @@ export const useStock = () => {
                 lastMovementAt: Timestamp.now()
             })
 
+            console.log('✅ [useStock] Reserved stock released successfully')
             await loadStocks()
         } catch (error) {
-            console.error('Error releasing reserved stock:', error)
+            console.error('❌ [useStock] Error releasing reserved stock:', error)
             throw error
         }
     }
