@@ -175,6 +175,10 @@ export const useStock = () => {
             }
 
             const stock = stockItems[0]
+            if (!stock) {
+                throw new Error('Stock item not found')
+            }
+
             const newQuantity = stock.quantity + quantityChange
             const newAvailableQuantity = stock.availableQuantity + quantityChange
 
@@ -211,6 +215,9 @@ export const useStock = () => {
             }
 
             const stock = stockItems[0]
+            if (!stock) {
+                throw new Error('Stock item not found')
+            }
 
             if (stock.availableQuantity < quantity) {
                 throw new Error('Insufficient available stock')
@@ -244,6 +251,9 @@ export const useStock = () => {
             }
 
             const stock = stockItems[0]
+            if (!stock) {
+                throw new Error('Stock item not found')
+            }
 
             if (stock.reservedQuantity < quantity) {
                 throw new Error('Cannot release more than reserved')
@@ -259,6 +269,36 @@ export const useStock = () => {
             await loadStocks()
         } catch (error) {
             console.error('❌ [useStock] Error releasing reserved stock:', error)
+            throw error
+        }
+    }
+
+    const createWarehouse = async (warehouseData: { name: string; location?: string; description?: string; isActive: boolean }) => {
+        try {
+            console.log('🔄 [useStock] Creating warehouse:', warehouseData)
+            
+            // Generate warehouse code based on name
+            const code = warehouseData.name.toUpperCase().replace(/\s+/g, '_').substring(0, 10)
+            
+            const newWarehouse: Omit<Warehouse, 'id'> = {
+                code,
+                name: warehouseData.name,
+                address: warehouseData.location || '',
+                phone: '',
+                isActive: warehouseData.isActive,
+                isDefault: false,
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now()
+            }
+            
+            const result = await warehouseFirestore.create(newWarehouse)
+            console.log('✅ [useStock] Warehouse created successfully:', result)
+            
+            // Reload warehouses to update the list
+            await loadWarehouses()
+            return result
+        } catch (error) {
+            console.error('❌ [useStock] Error creating warehouse:', error)
             throw error
         }
     }
@@ -289,6 +329,7 @@ export const useStock = () => {
         adjustStock,
         reserveStock,
         releaseReservedStock,
+        createWarehouse,
 
         clearError: () => {
             stockFirestore.clearError()

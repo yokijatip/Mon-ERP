@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useFirestore } from '@/composables/useFirestore'
 import type { Warehouse } from '@/types/firestore'
+import { Timestamp } from 'firebase/firestore'
 
 export const useWarehouse = () => {
     const firestore = useFirestore<Warehouse>('warehouses')
@@ -82,7 +83,14 @@ export const useWarehouse = () => {
                 }
             }
 
-            const id = await firestore.create(warehouseData)
+            // Add timestamps before creating
+            const warehouseWithTimestamps: Omit<Warehouse, 'id'> = {
+                ...warehouseData,
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now()
+            }
+
+            const id = await firestore.create(warehouseWithTimestamps)
             console.log('✅ [useWarehouse] Warehouse created successfully, ID:', id)
             await loadWarehouses()
             return id

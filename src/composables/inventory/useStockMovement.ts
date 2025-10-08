@@ -2,12 +2,14 @@
 import { ref, computed } from 'vue'
 import { useFirestore } from '@/composables/useFirestore'
 import { useNumbering } from '@/composables/useNumbering'
+import { useAuth } from '@/composables/useAuth'
 import type { StockMovement, StockMovementType } from '@/types/firestore'
 import { Timestamp } from 'firebase/firestore'
 
 export const useStockMovement = () => {
     const firestore = useFirestore<StockMovement>('stock_movements')
     const { generateNumber } = useNumbering()
+    const { user } = useAuth()
 
     const movements = ref<StockMovement[]>([])
     const currentMovement = ref<StockMovement | null>(null)
@@ -101,14 +103,29 @@ export const useStockMovement = () => {
             const movementNumber = await generateNumber('stockMovement')
             console.log('📝 [useStockMovement] Generated movement number:', movementNumber)
 
-            const newMovement: Omit<StockMovement, 'id'> = {
+            // Remove undefined fields to prevent Firestore errors
+            const cleanedData: any = {
                 ...movementData,
                 movementNumber,
-                createdAt: undefined as any,
-                createdBy: undefined as any
+                createdAt: Timestamp.now(),
+                createdBy: user.value?.uid || 'anonymous'
             }
 
-            const id = await firestore.create(newMovement)
+            // Remove undefined fields
+            Object.keys(cleanedData).forEach(key => {
+                if (cleanedData[key] === undefined) {
+                    delete cleanedData[key]
+                }
+            })
+
+            console.log('🔄 [useStockMovement] Cleaned movement data:', cleanedData)
+            console.log('👤 [useStockMovement] Created by user:', {
+                uid: user.value?.uid || 'anonymous',
+                email: user.value?.email || 'unknown',
+                displayName: user.value?.displayName || 'unknown'
+            })
+
+            const id = await firestore.create(cleanedData)
             console.log('✅ [useStockMovement] Movement created successfully, ID:', id)
             await loadMovements()
             return id

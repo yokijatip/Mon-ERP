@@ -6,10 +6,16 @@
         <h1 class="text-3xl font-bold">Stock Adjustments</h1>
         <p class="text-muted-foreground mt-1">Manage inventory adjustments and corrections</p>
       </div>
-      <Button @click="openAdjustmentDialog">
-        <Plus class="mr-2 h-4 w-4" />
-        New Adjustment
-      </Button>
+      <div class="flex gap-2">
+        <Button variant="outline" @click="openWarehouseDialog">
+          <Plus class="mr-2 h-4 w-4" />
+          Add Warehouse
+        </Button>
+        <Button @click="openAdjustmentDialog">
+          <Plus class="mr-2 h-4 w-4" />
+          New Adjustment
+        </Button>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -30,29 +36,33 @@
 
           <div class="space-y-2">
             <Label>Type</Label>
-            <select
-                v-model="selectedType"
-                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="all">All Types</option>
-              <option value="in">Stock In</option>
-              <option value="out">Stock Out</option>
-              <option value="adjustment">Adjustment</option>
-              <option value="transfer">Transfer</option>
-            </select>
+            <Select v-model="selectedType">
+              <SelectTrigger>
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="in">Stock In</SelectItem>
+                <SelectItem value="out">Stock Out</SelectItem>
+                <SelectItem value="adjustment">Adjustment</SelectItem>
+                <SelectItem value="transfer">Transfer</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div class="space-y-2">
             <Label>Warehouse</Label>
-            <select
-                v-model="selectedWarehouse"
-                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="all">All Warehouses</option>
-              <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
-                {{ warehouse.name }}
-              </option>
-            </select>
+            <Select v-model="selectedWarehouse">
+              <SelectTrigger>
+                <SelectValue placeholder="All Warehouses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Warehouses</SelectItem>
+                <SelectItem v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
+                  {{ warehouse.name }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div class="space-y-2 flex items-end">
@@ -155,17 +165,17 @@
           <div class="grid gap-4 md:grid-cols-2">
             <div class="space-y-2">
               <Label>Adjustment Type *</Label>
-              <select
-                  v-model="adjustmentForm.type"
-                  class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  required
-              >
-                <option value="">Select type...</option>
-                <option value="in">Stock In</option>
-                <option value="out">Stock Out</option>
-                <option value="adjustment">Adjustment</option>
-                <option value="transfer">Transfer</option>
-              </select>
+              <Select v-model="adjustmentForm.type">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="in">Stock In</SelectItem>
+                  <SelectItem value="out">Stock Out</SelectItem>
+                  <SelectItem value="adjustment">Adjustment</SelectItem>
+                  <SelectItem value="transfer">Transfer</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div class="space-y-2">
@@ -180,46 +190,45 @@
 
           <div class="space-y-2">
             <Label>Product *</Label>
-            <select
-                v-model="adjustmentForm.productId"
-                @change="onProductChange"
-                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                required
-            >
-              <option value="">Select product...</option>
-              <option v-for="product in products" :key="product.id" :value="product.id">
-                {{ product.name }} ({{ product.sku }})
-              </option>
-            </select>
+            <Select v-model="adjustmentForm.productId" @update:model-value="onProductChange">
+              <SelectTrigger>
+                <SelectValue placeholder="Select product..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="product in products" :key="product.id" :value="product.id">
+                  {{ product.name }} ({{ product.sku }})
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div class="grid gap-4 md:grid-cols-2">
             <div class="space-y-2">
               <Label>{{ adjustmentForm.type === 'transfer' ? 'From Warehouse *' : 'Warehouse *' }}</Label>
-              <select
-                  v-model="adjustmentForm.fromWarehouseId"
-                  class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  required
-              >
-                <option value="">Select warehouse...</option>
-                <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
-                  {{ warehouse.name }}
-                </option>
-              </select>
+              <Select v-model="adjustmentForm.fromWarehouseId">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select warehouse..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
+                    {{ warehouse.name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div v-if="adjustmentForm.type === 'transfer'" class="space-y-2">
               <Label>To Warehouse *</Label>
-              <select
-                  v-model="adjustmentForm.toWarehouseId"
-                  class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  required
-              >
-                <option value="">Select warehouse...</option>
-                <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
-                  {{ warehouse.name }}
-                </option>
-              </select>
+              <Select v-model="adjustmentForm.toWarehouseId">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select warehouse..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
+                    {{ warehouse.name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -281,6 +290,53 @@
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    <!-- Add Warehouse Dialog -->
+    <AlertDialog v-model:open="showWarehouseDialog">
+      <AlertDialogContent class="max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Add New Warehouse</AlertDialogTitle>
+          <AlertDialogDescription>
+            Create a new warehouse location for inventory management
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <div class="space-y-4 py-4">
+          <div class="space-y-2">
+            <Label>Warehouse Name *</Label>
+            <Input
+                v-model="warehouseForm.name"
+                placeholder="Enter warehouse name"
+                required
+            />
+          </div>
+
+          <div class="space-y-2">
+            <Label>Location</Label>
+            <Input
+                v-model="warehouseForm.location"
+                placeholder="Enter warehouse location"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <Label>Description</Label>
+            <textarea
+                v-model="warehouseForm.description"
+                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                placeholder="Optional description..."
+            />
+          </div>
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel @click="closeWarehouseDialog">Cancel</AlertDialogCancel>
+          <AlertDialogAction @click="submitWarehouse" :disabled="!warehouseForm.name.trim() || submittingWarehouse">
+            {{ submittingWarehouse ? 'Creating...' : 'Create Warehouse' }}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>
 
@@ -305,6 +361,13 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import {
   Plus,
   Search,
   X,
@@ -326,11 +389,13 @@ const {
   createMovement
 } = useStockMovement()
 
-const { warehouses, loadWarehouses } = useStock()
+const { warehouses, loadWarehouses, createWarehouse } = useStock()
 const { products, loadProducts } = useProducts()
 
 const showAdjustmentDialog = ref(false)
+const showWarehouseDialog = ref(false)
 const submitting = ref(false)
+const submittingWarehouse = ref(false)
 
 const adjustmentForm = ref({
   type: '' as StockMovementType | '',
@@ -345,6 +410,12 @@ const adjustmentForm = ref({
   unitCost: 0,
   referenceNumber: '',
   notes: ''
+})
+
+const warehouseForm = ref({
+  name: '',
+  location: '',
+  description: ''
 })
 
 const totalCost = computed(() => {
@@ -437,6 +508,15 @@ const closeAdjustmentDialog = () => {
   resetForm()
 }
 
+const openWarehouseDialog = () => {
+  showWarehouseDialog.value = true
+}
+
+const closeWarehouseDialog = () => {
+  showWarehouseDialog.value = false
+  resetWarehouseForm()
+}
+
 const resetForm = () => {
   adjustmentForm.value = {
     type: '',
@@ -451,6 +531,14 @@ const resetForm = () => {
     unitCost: 0,
     referenceNumber: '',
     notes: ''
+  }
+}
+
+const resetWarehouseForm = () => {
+  warehouseForm.value = {
+    name: '',
+    location: '',
+    description: ''
   }
 }
 
@@ -488,6 +576,39 @@ const submitAdjustment = async () => {
     toast.error(`Failed to create adjustment: ${error.message}`)
   } finally {
     submitting.value = false
+  }
+}
+
+const submitWarehouse = async () => {
+  if (!warehouseForm.value.name.trim()) {
+    console.error('❌ [Adjustments] Warehouse name is required')
+    return
+  }
+
+  submittingWarehouse.value = true
+
+  try {
+    const result = await createWarehouse({
+      name: warehouseForm.value.name.trim(),
+      location: warehouseForm.value.location.trim() || undefined,
+      description: warehouseForm.value.description.trim() || undefined,
+      isActive: true
+    })
+
+    console.log('✅ [Adjustments] Warehouse created successfully:', {
+      id: result,
+      name: warehouseForm.value.name.trim(),
+      location: warehouseForm.value.location.trim() || 'No location',
+      description: warehouseForm.value.description.trim() || 'No description'
+    })
+    
+    closeWarehouseDialog()
+    // Reload warehouses to update the list
+    await loadWarehouses()
+  } catch (error: any) {
+    console.error('❌ [Adjustments] Failed to create warehouse:', error.message)
+  } finally {
+    submittingWarehouse.value = false
   }
 }
 </script>
