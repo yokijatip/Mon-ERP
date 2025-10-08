@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,13 +13,37 @@ import {
   MoreVertical,
   Search,
   Download,
-  Filter
+  Filter,
+  RefreshCw
 } from 'lucide-vue-next'
+import { useStock } from '@/composables/inventory/useStock'
+import { useStockMovement } from '@/composables/inventory/useStockMovement'
+import { useProducts } from '@/composables/useProducts'
+import type { Stock, StockMovement } from '@/types/firestore'
 
-const inventoryStats = ref([
+const { 
+  stocks, 
+  totalStockValue, 
+  lowStockItems, 
+  outOfStockItems,
+  loadStocks 
+} = useStock()
+
+const { 
+  movements, 
+  loadMovements,
+  getRecentMovements 
+} = useStockMovement()
+
+const { products, categories, loadProducts } = useProducts()
+
+const loading = ref(false)
+const recentMovements = ref<StockMovement[]>([])
+
+const inventoryStats = computed(() => [
   {
     title: 'Total Products',
-    value: '2,845',
+    value: stocks.value.length.toString(),
     change: '+12.5%',
     isPositive: true,
     icon: Package,
@@ -28,7 +52,7 @@ const inventoryStats = ref([
   },
   {
     title: 'Low Stock Items',
-    value: '127',
+    value: lowStockItems.value.toString(),
     change: '+8.2%',
     isPositive: false,
     icon: AlertTriangle,
@@ -37,7 +61,7 @@ const inventoryStats = ref([
   },
   {
     title: 'Out of Stock',
-    value: '43',
+    value: outOfStockItems.value.toString(),
     change: '-15.3%',
     isPositive: true,
     icon: Package,
@@ -46,7 +70,7 @@ const inventoryStats = ref([
   },
   {
     title: 'Total Value',
-    value: '$1.2M',
+    value: formatCurrency(totalStockValue.value),
     change: '+23.1%',
     isPositive: true,
     icon: ShoppingCart,
@@ -55,17 +79,37 @@ const inventoryStats = ref([
   }
 ])
 
-// Stock Movement Chart
-const stockMovementSeries = ref([
-  {
-    name: 'Stock In',
-    data: [120, 150, 180, 140, 200, 170, 190, 210, 180, 220]
-  },
-  {
-    name: 'Stock Out',
-    data: [100, 130, 150, 120, 170, 150, 160, 180, 160, 190]
-  }
-])
+const stockMovementSeries = computed(() => {
+  const monthlyData: { [key: string]: { in: number; out: number } } = {}
+  
+  movements.value.forEach(movement => {
+    const date = new Date(movement.date.seconds * 1000)
+    const monthKey = date.toLocaleString('default', { month: 'short' })
+    
+    if (!monthlyData[monthKey]) {
+      monthlyData[monthKey] = { in: 0, out: 0 }
+    }
+    
+    if (movement.type === 'in') {
+      monthlyData[monthKey].in += movement.quantity
+    } else if (movement.type === 'out') {
+      monthlyData[monthKey].out += movement.quantity
+    }
+  })
+  
+  const months = Object.keys(monthlyData).slice(-10)
+  
+  return [
+    {
+      name: 'Stock In',
+      data: months.map(m => monthlyData[m]?.in || 0)
+    },
+    {
+      name: 'Stock Out',
+      data: months.map(m => monthlyData[m]?.out || 0)
+    }
+  ]
+})
 
 const stockMovementOptions = ref({
   chart: {
@@ -105,94 +149,91 @@ const stockMovementOptions = ref({
   }
 })
 
-// Category Distribution
-const categoryDistribution = ref([
-  { name: 'Electronics', percentage: 42, value: '$504K', color: 'bg-blue-600' },
-  { name: 'Accessories', percentage: 28, value: '$336K', color: 'bg-green-600' },
-  { name: 'Peripherals', percentage: 18, value: '$216K', color: 'bg-yellow-600' },
-  { name: 'Others', percentage: 12, value: '$144K', color: 'bg-gray-600' }
-])
+const categoryDistribution = computed(() => {
+  const distribution: { [key: string]: { value: number; count: number } } = {}
+  
+  stocks.value.forEach(stock => {
+    const product = products.value.find(p => p.id === stock.productId)
+    const category = product?.category || 'Other'
+    
+    if (!distribution[category]) {
+      distribution[category] = { value: 0, count: 0 }
+    }
+    
+    distribution[category].value += stock.totalValue
+    distribution[category].count += 1
+  })
+  
+  const total = Object.values(distribution).reduce((sum, d) => sum + d.value, 0)
+  
+  const colors = ['bg-blue-600', 'bg-green-600', 'bg-yellow-600', 'bg-purple-600', 'bg-red-600', 'bg-gray-600']
+  
+  return Object.entries(distribution)
+    .map(([name, data], index) => ({
+      name,
+      percentage: total > 0 ? Math.round((data.value / total) * 100) : 0,
+      value: formatCurrency(data.value),
+      color: colors[index % colors.length]
+    }))
+    .sort((a, b) => b.percentage - a.percentage)
+    .slice(0, 4)
+})
 
-const topProducts = ref([
-  {
-    name: 'Wireless Headphones Pro',
-    sku: 'WHP-001',
-    stock: 245,
-    value: '$24,500',
-    status: 'In Stock',
-    category: 'Electronics'
-  },
-  {
-    name: 'Smart Watch Series 5',
-    sku: 'SWS-005',
-    stock: 89,
-    value: '$35,600',
-    status: 'Low Stock',
-    category: 'Electronics'
-  },
-  {
-    name: 'Laptop Stand Aluminum',
-    sku: 'LSA-102',
-    stock: 0,
-    value: '$0',
-    status: 'Out of Stock',
-    category: 'Accessories'
-  },
-  {
-    name: 'USB-C Hub 7-in-1',
-    sku: 'UCH-701',
-    stock: 567,
-    value: '$17,010',
-    status: 'In Stock',
-    category: 'Accessories'
-  },
-  {
-    name: 'Mechanical Keyboard RGB',
-    sku: 'MKR-203',
-    stock: 34,
-    value: '$5,100',
-    status: 'Low Stock',
-    category: 'Peripherals'
-  }
-])
+const topProducts = computed(() => {
+  return stocks.value
+    .map(stock => {
+      const product = products.value.find(p => p.id === stock.productId)
+      return {
+        name: stock.productName,
+        sku: stock.productSku,
+        stock: stock.quantity,
+        value: formatCurrency(stock.totalValue),
+        status: getStockStatus(stock),
+        category: product?.category || 'Unknown'
+      }
+    })
+    .sort((a, b) => {
+      const aValue = parseFloat(a.value.replace(/[^0-9.-]+/g, ''))
+      const bValue = parseFloat(b.value.replace(/[^0-9.-]+/g, ''))
+      return bValue - aValue
+    })
+    .slice(0, 5)
+})
 
-const recentMovements = ref([
-  {
-    type: 'IN',
-    product: 'Wireless Mouse',
-    quantity: 150,
-    date: '2025-10-08',
-    reference: 'PO-2845'
-  },
-  {
-    type: 'OUT',
-    product: 'HDMI Cable 2m',
-    quantity: 75,
-    date: '2025-10-08',
-    reference: 'SO-9234'
-  },
-  {
-    type: 'IN',
-    product: 'Phone Case Clear',
-    quantity: 200,
-    date: '2025-10-07',
-    reference: 'PO-2843'
-  },
-  {
-    type: 'OUT',
-    product: 'Laptop Charger 65W',
-    quantity: 45,
-    date: '2025-10-07',
-    reference: 'SO-9232'
-  },
-  {
-    type: 'ADJ',
-    product: 'Screen Protector',
-    quantity: -12,
-    date: '2025-10-06',
-    reference: 'ADJ-456'
+onMounted(async () => {
+  await refreshData()
+})
+
+const refreshData = async () => {
+  loading.value = true
+  try {
+    await Promise.all([
+      loadStocks(),
+      loadMovements(),
+      loadProducts()
+    ])
+    
+    recentMovements.value = await getRecentMovements(5)
+  } catch (error) {
+    console.error('Error loading data:', error)
+  } finally {
+    loading.value = false
   }
-])
+}
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(value)
+}
+
+const getStockStatus = (stock: Stock) => {
+  if (stock.availableQuantity === 0) return 'Out of Stock'
+  if (stock.availableQuantity < 10) return 'Low Stock'
+  return 'In Stock'
+}
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -205,11 +246,20 @@ function getStatusColor(status: string) {
 
 function getMovementColor(type: string) {
   switch (type) {
-    case 'IN': return 'bg-green-100 text-green-700'
-    case 'OUT': return 'bg-blue-100 text-blue-700'
-    case 'ADJ': return 'bg-yellow-100 text-yellow-700'
+    case 'in': return 'bg-green-100 text-green-700'
+    case 'out': return 'bg-blue-100 text-blue-700'
+    case 'adjustment': return 'bg-yellow-100 text-yellow-700'
+    case 'transfer': return 'bg-purple-100 text-purple-700'
     default: return 'bg-gray-100 text-gray-700'
   }
+}
+
+const formatDate = (timestamp: any) => {
+  return new Date(timestamp.seconds * 1000).toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
 }
 </script>
 
@@ -221,6 +271,10 @@ function getMovementColor(type: string) {
         <p class="text-muted-foreground mt-1">Monitor and manage your inventory in real-time</p>
       </div>
       <div class="flex gap-2">
+        <Button variant="outline" size="sm" @click="refreshData">
+          <RefreshCw :class="{ 'animate-spin': loading }" class="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
         <Button variant="outline" size="sm">
           <Filter class="h-4 w-4 mr-2" />
           Filter
@@ -256,7 +310,11 @@ function getMovementColor(type: string) {
       </Card>
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
+
+    <div v-else class="grid gap-6 lg:grid-cols-3">
       <Card class="lg:col-span-2">
         <CardHeader>
           <div class="flex items-center justify-between">
@@ -304,7 +362,7 @@ function getMovementColor(type: string) {
 
           <div class="mt-6 p-4 bg-blue-50 rounded-lg">
             <div class="text-sm font-medium mb-1">Total Inventory Value</div>
-            <div class="text-2xl font-bold">$1,200,000</div>
+            <div class="text-2xl font-bold">{{ formatCurrency(totalStockValue) }}</div>
             <div class="flex items-center mt-2 text-green-600">
               <TrendingUp class="h-4 w-4 mr-1" />
               <span class="text-sm font-medium">+23.1% from last month</span>
@@ -326,7 +384,10 @@ function getMovementColor(type: string) {
           </div>
         </CardHeader>
         <CardContent>
-          <div class="space-y-3">
+          <div v-if="topProducts.length === 0" class="text-center py-8 text-muted-foreground">
+            No products found
+          </div>
+          <div v-else class="space-y-3">
             <div v-for="product in topProducts" :key="product.sku"
                  class="flex items-center justify-between p-3 rounded-lg border">
               <div class="flex-1">
@@ -357,27 +418,30 @@ function getMovementColor(type: string) {
           <CardDescription>Latest inventory transactions</CardDescription>
         </CardHeader>
         <CardContent>
-          <div class="space-y-3">
-            <div v-for="movement in recentMovements" :key="movement.reference"
+          <div v-if="recentMovements.length === 0" class="text-center py-8 text-muted-foreground">
+            No recent movements
+          </div>
+          <div v-else class="space-y-3">
+            <div v-for="movement in recentMovements" :key="movement.id"
                  class="flex items-start gap-3 pb-3 border-b last:border-0">
               <Badge :class="getMovementColor(movement.type)" class="border-0 mt-1">
-                {{ movement.type }}
+                {{ movement.type.toUpperCase() }}
               </Badge>
               <div class="flex-1">
-                <div class="font-medium text-sm">{{ movement.product }}</div>
+                <div class="font-medium text-sm">{{ movement.productName }}</div>
                 <div class="text-xs text-muted-foreground mt-1">
-                  {{ movement.reference }} • {{ movement.date }}
+                  {{ movement.movementNumber }} • {{ formatDate(movement.date) }}
                 </div>
               </div>
               <div class="text-right">
                 <div class="font-semibold text-sm"
-                     :class="movement.quantity > 0 ? 'text-green-600' : 'text-red-600'">
-                  {{ movement.quantity > 0 ? '+' : '' }}{{ movement.quantity }}
+                     :class="movement.type === 'in' ? 'text-green-600' : movement.type === 'out' ? 'text-red-600' : ''">
+                  {{ movement.type === 'in' ? '+' : movement.type === 'out' ? '-' : '' }}{{ movement.quantity }}
                 </div>
               </div>
             </div>
           </div>
-          <Button variant="outline" class="w-full mt-4" size="sm">
+          <Button variant="outline" class="w-full mt-4" size="sm" @click="$router.push('/inventory/adjustments')">
             View All Movements
           </Button>
         </CardContent>

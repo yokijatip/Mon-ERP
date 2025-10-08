@@ -63,8 +63,12 @@ See `.env.example` for the template.
 - **Authentication:** Firebase Auth with role-based access control
 - **Modules:**
   - Dashboard & Analytics
-  - Product Management
-  - Inventory & Warehouse Management
+  - **Product Management** ✅ (Sudah Berfungsi)
+  - **Inventory & Warehouse Management** ✅ (Sudah Berfungsi)
+    - Real-time Inventory Dashboard dengan statistik dan visualisasi
+    - Stock Overview dengan multi-warehouse support
+    - Stock Adjustments (In/Out/Transfer/Adjustment)
+    - Comprehensive Stock Reports (Valuation, Movement, Low Stock Alert, Aging Analysis)
   - Sales & Customer Management
   - Purchase Orders & Supplier Management
   - Financial Management & Accounting
@@ -72,12 +76,74 @@ See `.env.example` for the template.
   - Reporting & Exports
   - System Settings & Integrations
 
+## Inventory Module - Fitur yang Sudah Berfungsi
+
+### 1. Inventory Dashboard
+- **Statistik Real-time:**
+  - Total Products & Active SKUs
+  - Low Stock Items Alert
+  - Out of Stock Items
+  - Total Inventory Value
+- **Visualisasi:**
+  - Stock Movement Trend (Bar Chart)
+  - Category Distribution dengan persentase
+  - Top Products by Value
+  - Recent Stock Movements
+
+### 2. Stock Overview
+- Monitoring stok di semua warehouse
+- Filter berdasarkan:
+  - Search (Product/SKU)
+  - Warehouse
+  - Low Stock Only
+- Detail informasi:
+  - Quantity, Reserved, Available
+  - Average Cost & Total Value
+  - Status (In Stock/Low Stock/Out of Stock)
+
+### 3. Stock Adjustments
+- **Tipe Movement:**
+  - Stock In - Penambahan stok
+  - Stock Out - Pengurangan stok
+  - Transfer - Transfer antar warehouse
+  - Adjustment - Koreksi stok
+- **Features:**
+  - Auto-generate Movement Number
+  - Product & Warehouse Selection
+  - Cost Calculation
+  - Reference Number & Notes
+  - History tracking
+
+### 4. Stock Reports
+- **Valuation Report:**
+  - Total Stock Value
+  - Value per Category
+  - Percentage distribution
+- **Movement Report:**
+  - Stock In/Out summary
+  - Net Change calculation
+  - Date range filter
+- **Low Stock Alert:**
+  - Items below threshold
+  - Urgent reorder list
+- **Aging Report:**
+  - Fast Moving (< 30 days)
+  - Normal Moving (30-90 days)
+  - Slow Moving (90-180 days)
+  - Dead Stock (> 180 days)
+
 ## Recent Changes (October 8, 2025)
 - ✅ Configured Vite for Replit environment (port 5000, host 0.0.0.0)
 - ✅ Set up HMR over WebSocket for proper hot-reload in Replit
 - ✅ Created `.env.example` template for Firebase configuration
 - ✅ Installed all npm dependencies
 - ✅ Configured Frontend Server workflow
+- ✅ Configured deployment settings (autoscale)
+- ✅ **Memfungsikan semua fitur Inventory Module:**
+  - ✅ **InventoryDashboard** - Dashboard real-time dengan data dari Firebase (statistik, grafik, top products, recent movements)
+  - ✅ **StockOverview** - Monitoring level stok di semua warehouse dengan filter
+  - ✅ **Adjustments** - Manajemen stock movements (Stock In, Stock Out, Transfer, Adjustment)
+  - ✅ **StockReports** - Laporan lengkap (Valuation, Movement, Low Stock, Aging)
 
 ## Deployment
 The project uses Vite for building. To deploy:
