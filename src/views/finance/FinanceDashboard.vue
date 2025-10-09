@@ -362,31 +362,36 @@ function getStatusColor(status: string) {
       </div>
     </div>
 
+    <!-- Finance Stats Grid -->
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card v-for="stat in financeStats" :key="stat.title">
-        <CardHeader class="flex flex-row items-center justify-between pb-2">
-          <div :class="[stat.color, 'p-2 rounded-lg']">
+      <Card v-for="stat in financeStats" :key="stat.title" class="relative hover:shadow-md transition-shadow">
+        <CardHeader class="flex flex-row items-start justify-between">
+          <div class="text-sm text-muted-foreground">{{ stat.title }}</div>
+          <div :class="[stat.color, 'p-2 rounded-md']">
             <component :is="stat.icon" class="h-5 w-5" />
           </div>
         </CardHeader>
         <CardContent>
-          <div class="text-sm text-muted-foreground">{{ stat.title }}</div>
-          <div class="text-2xl font-bold mt-1">{{ stat.value }}</div>
-          <div class="flex items-center justify-between mt-2">
-            <div class="flex items-center">
+          <div class="text-xl font-bold">{{ stat.value }}</div>
+          <div class="flex items-center justify-between mt-2 w-full">
+
+            <div class="flex items-center justify-between">
               <component :is="stat.isPositive ? TrendingUp : TrendingDown"
                          :class="[stat.isPositive ? 'text-green-600' : 'text-red-600', 'h-4 w-4 mr-1']" />
-              <span :class="[stat.isPositive ? 'text-green-600' : 'text-red-600', 'text-sm font-medium']">
+              <span :class="[stat.isPositive ? 'text-green-600' : 'text-red-600', 'text-xs font-medium']">
                 {{ stat.change }}
               </span>
             </div>
-            <span class="text-xs text-muted-foreground">{{ stat.description }}</span>
+
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-muted-foreground">{{ stat.description }}</span>
+            </div>
           </div>
         </CardContent>
       </Card>
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid gap-4 lg:grid-cols-3">
       <Card class="lg:col-span-2">
         <CardHeader>
           <div class="flex items-center justify-between">

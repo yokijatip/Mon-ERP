@@ -389,7 +389,7 @@ const value = ref({
       </div>
     </div>
 
-    <!-- Stats Grid -->
+    <!-- Home Stats Grid -->
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card v-for="stat in statsCards" :key="stat.title" class="relative hover:shadow-md transition-shadow">
         <CardHeader class="flex flex-row items-start justify-between">
@@ -401,6 +401,7 @@ const value = ref({
         <CardContent>
           <div class="text-xl font-bold">{{ stat.value }}</div>
           <div class="flex items-center justify-between mt-2 w-full border-0">
+
             <div class="flex items-center justify-between border-0 border-amber-600">
               <component :is="stat.isPositive ? TrendingUp : TrendingDown"
                          :class="[stat.isPositive ? 'text-green-600' : 'text-red-600', 'h-4 w-4 mr-1']"/>
