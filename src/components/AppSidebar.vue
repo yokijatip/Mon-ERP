@@ -150,10 +150,6 @@ const data = {
           url: "/products",
         },
         {
-          title: "Stock Overview",
-          url: "/inventory/stock-overview",
-        },
-        {
           title: "Adjustments",
           url: "/inventory/adjustments",
         },

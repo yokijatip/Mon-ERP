@@ -238,17 +238,6 @@ const routes: RouteRecordRaw[] = [
                 }
             },
             {
-                path: 'inventory/stock-overview',
-                name: 'StockOverview',
-                component: () => import('@/views/inventory/StockOverview.vue'),
-                meta: {
-                    breadcrumb: [
-                        { label: 'Inventory', path: '/inventory/dashboard' },
-                        { label: 'Stock Overview' }
-                    ]
-                }
-            },
-            {
                 path: 'inventory/stock-reports',
                 name: 'StockReports',
                 component: () => import('@/views/inventory/StockReports.vue'),

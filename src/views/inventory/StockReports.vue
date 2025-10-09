@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 space-y-6">
+  <div class="space-y-4">
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
@@ -29,9 +29,9 @@
         ]"
           @click="selectedReport = report.id"
       >
-        <CardContent class="pt-6">
-          <div class="flex items-center space-x-4">
-            <div class="p-3 rounded-lg bg-primary/10">
+        <CardContent class="">
+          <div class="flex items-center space-x-2">
+            <div class="p-2 rounded-lg bg-primary/10">
               <component :is="report.icon" class="h-6 w-6 text-primary" />
             </div>
             <div>
@@ -45,7 +45,7 @@
 
     <!-- Date Range Filter -->
     <Card>
-      <CardContent class="pt-6">
+      <CardContent class="">
         <div class="grid gap-4 md:grid-cols-5">
           <div class="space-y-2">
             <Label>Start Date</Label>
@@ -408,26 +408,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useStock } from '@/composables/inventory/useStock'
-import { useStockMovement } from '@/composables/inventory/useStockMovement'
-import { useProducts } from '@/composables/useProducts'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import {
-  Download,
-  RefreshCw,
-  FileText,
-  Package,
-  TrendingUp,
-  AlertTriangle,
-  Clock,
-  Plus
-} from 'lucide-vue-next'
-import type { Stock, StockMovement } from '@/types/firestore'
+import {computed, onMounted, ref} from 'vue'
+import {useStock} from '@/composables/inventory/useStock'
+import {useStockMovement} from '@/composables/inventory/useStockMovement'
+import {useProducts} from '@/composables/useProducts'
+import {Button} from '@/components/ui/button'
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card'
+import {Input} from '@/components/ui/input'
+import {Label} from '@/components/ui/label'
+import {Badge} from '@/components/ui/badge'
+import {AlertTriangle, Clock, Download, FileText, Package, Plus, RefreshCw, TrendingUp} from 'lucide-vue-next'
+import type {Stock, StockMovement} from '@/types/firestore'
 
 const {
   stocks,

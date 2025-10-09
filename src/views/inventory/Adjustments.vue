@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 space-y-6">
+  <div class="space-y-4">
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
@@ -20,7 +20,7 @@
 
     <!-- Filters -->
     <Card>
-      <CardContent class="pt-6">
+      <CardContent class="">
         <div class="grid gap-4 md:grid-cols-4">
           <div class="space-y-2">
             <Label>Search</Label>
@@ -36,7 +36,7 @@
 
           <div class="space-y-2">
             <Label>Type</Label>
-            <Select v-model="selectedType">
+            <Select v-model="selectedType" class="w-fit">
               <SelectTrigger>
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
@@ -379,7 +379,6 @@ import type { StockMovementType } from '@/types/firestore'
 import { toast } from 'vue-sonner'
 
 const {
-  movements,
   searchTerm,
   selectedType,
   selectedWarehouse,
@@ -552,23 +551,42 @@ const submitAdjustment = async () => {
 
   try {
     const form = adjustmentForm.value
-    const date = Timestamp.fromDate(new Date(form.date))
+    const date = Timestamp.fromDate(new Date(form.date?.toString() || new Date().toISOString()))
 
-    await createMovement({
+    // Prepare movement data without undefined fields
+    const movementData: any = {
       date,
       type: form.type as StockMovementType,
       productId: form.productId,
       productSku: form.productSku,
       productName: form.productName,
-      fromWarehouseId: form.type === 'in' ? undefined : form.fromWarehouseId,
-      toWarehouseId: form.type === 'out' ? undefined : (form.type === 'transfer' ? form.toWarehouseId : form.fromWarehouseId),
       quantity: form.quantity,
       unit: form.unit,
       unitCost: form.unitCost,
-      totalCost: totalCost.value,
-      referenceNumber: form.referenceNumber || undefined,
-      notes: form.notes || undefined
-    })
+      totalCost: totalCost.value
+    }
+
+    // Add warehouse IDs based on movement type
+    if (form.type !== 'in' && form.fromWarehouseId) {
+      movementData.fromWarehouseId = form.fromWarehouseId
+    }
+    if (form.type !== 'out') {
+      if (form.type === 'transfer' && form.toWarehouseId) {
+        movementData.toWarehouseId = form.toWarehouseId
+      } else if (form.type === 'in' && form.fromWarehouseId) {
+        movementData.toWarehouseId = form.fromWarehouseId
+      }
+    }
+
+    // Add optional fields only if they have values
+    if (form.referenceNumber) {
+      movementData.referenceNumber = form.referenceNumber
+    }
+    if (form.notes) {
+      movementData.notes = form.notes
+    }
+
+    await createMovement(movementData)
 
     toast.success('Stock adjustment created successfully')
     closeAdjustmentDialog()
